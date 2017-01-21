@@ -4,40 +4,51 @@ using UnityEngine;
 
 public class WaveMover : MonoBehaviour {
 
-    //public float min = 5f;
-    //public float max = 100f;
+    public Transform Aposition;
+    public Transform Bposition;
+    private Vector3 pointB;
+    private Vector3 pointA;
+    private bool isFacingRight = true;
+    //public float min = 0;
+    //public float max = 0;
+
     //// Use this for initialization
     //void Start()
     //{
 
-    //    min = transform.position.x;
-    //    max = transform.position.x + 3;
+    //    min = Aposition.position.x;
+    //    max = Bposition.position.x;
 
     //}
 
     //// Update is called once per frame
     //void Update()
     //{
-    //    transform.position = new Vector3(Mathf.PingPong(Time.time * 2, max - min) + min, transform.position.y, transform.position.z);
+    //    //Debug.Log(GlobalVariables.isHostOn);
+    //    //Debug.Log(GlobalVariables.isClientOn);
+    //    //if (GlobalVariables.isHostOn && GlobalVariables.isClientOn)
+    //    //{
+    //        transform.position = new Vector3(Mathf.PingPong(Time.time*2, max - min) + min, transform.position.y,transform.position.z);
+    //        if (transform.position == Bposition.position || transform.position == Aposition.position) Flipper();
+    //    //}
     //}
-    public Transform Aposition;
-    public Transform Bposition;
-    private Vector3 pointB;
-    private Vector3 pointA;
-    private bool isFacingRight = true;
+
 
     IEnumerator Start()
     {
-        //if (GlobalVariables.isHostOn && GlobalVariables.isClientOn)
-        //{
-            pointB = Bposition.position;
-            pointA = Aposition.position;
-            while (true)
-            {
-                yield return StartCoroutine(MoveObject(transform, pointA, pointB, 3.0f));
-                yield return StartCoroutine(MoveObject(transform, pointB, pointA, 3.0f));
-            }
-        //}
+        pointB = Bposition.position;
+        pointA = Aposition.position;
+        while (true)
+        {
+            yield return StartCoroutine(MoveObject(transform, pointA, pointB, 3.0f));
+            yield return StartCoroutine(MoveObject(transform, pointB, pointA, 3.0f));
+        }
+
+    }
+
+    void Update()
+    {
+        //Debug.Log(GlobalVariables.playerCount);
     }
 
     IEnumerator MoveObject(Transform thisTransform, Vector3 startPos, Vector3 endPos, float time)
@@ -48,8 +59,7 @@ public class WaveMover : MonoBehaviour {
         {
             i += Time.deltaTime * rate;
             thisTransform.position = Vector3.Lerp(startPos, endPos, i);
-            if (thisTransform.position == pointB || thisTransform.position == pointA)
-                Flipper();
+            if (thisTransform.position == pointB || thisTransform.position == pointA) Flipper();
             yield return null;
         }
     }
