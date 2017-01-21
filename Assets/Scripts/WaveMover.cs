@@ -3,63 +3,63 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class WaveMover : MonoBehaviour {
+    public Transform WaveParent;
 
     public Transform Aposition;
     public Transform Bposition;
+
     private Vector3 pointB;
     private Vector3 pointA;
+
+    private float timer = 4.0f;
+
     private bool isFacingRight = true;
-    //public float min = 0;
-    //public float max = 0;
 
-    //// Use this for initialization
-    //void Start()
-    //{
-
-    //    min = Aposition.position.x;
-    //    max = Bposition.position.x;
-
-    //}
-
-    //// Update is called once per frame
-    //void Update()
-    //{
-    //    //Debug.Log(GlobalVariables.isHostOn);
-    //    //Debug.Log(GlobalVariables.isClientOn);
-    //    //if (GlobalVariables.isHostOn && GlobalVariables.isClientOn)
-    //    //{
-    //        transform.position = new Vector3(Mathf.PingPong(Time.time*2, max - min) + min, transform.position.y,transform.position.z);
-    //        if (transform.position == Bposition.position || transform.position == Aposition.position) Flipper();
-    //    //}
-    //}
-
+    const float INCREASE_SCALE_Y = 0.05f;
+    const float INCREASE_SCALE_X = 0.025f;
+    const float DECREASE_TIMER_VALUE = 0.1f;
+    const float MAX_SCALE_Y = 1.0f;
+    const float MIN_TIMER_VALUE = 1.0f;
 
     IEnumerator Start()
     {
-        pointB = Bposition.position;
+        transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
         pointA = Aposition.position;
-        while (true)
+        pointB = Bposition.position;
+        Vector3 temp;
+        while (true)    
         {
-            yield return StartCoroutine(MoveObject(transform, pointA, pointB, 3.0f));
-            yield return StartCoroutine(MoveObject(transform, pointB, pointA, 3.0f));
-        }
-
+            yield return StartCoroutine(MoveObject(transform, timer));
+            temp = pointA;
+            pointA = pointB;
+            pointB = temp;
+            yield return StartCoroutine(MoveObject(transform, timer));
+            temp = pointA;
+            pointA = pointB;
+            pointB = temp;
+        }    
     }
-
-    void Update()
+    
+    void FixedUpdate()
     {
-        //Debug.Log(GlobalVariables.playerCount);
+        
     }
 
-    IEnumerator MoveObject(Transform thisTransform, Vector3 startPos, Vector3 endPos, float time)
+    IEnumerator MoveObject(Transform thisTransform, float time)
     {
         var i = 0.0f;
         var rate = 1.0f / time;
         while (i < 1.0f)
         {
             i += Time.deltaTime * rate;
-            thisTransform.position = Vector3.Lerp(startPos, endPos, i);
-            if (thisTransform.position == pointB || thisTransform.position == pointA) Flipper();
+                
+            if (thisTransform.position == pointB || thisTransform.position == pointA)
+            {
+                Flipper();
+                ScaleAndLiftWave();
+                SpeedIncreaser();
+            }
+            thisTransform.position = Vector3.Lerp(pointA, pointB, i);
             yield return null;
         }
     }
@@ -67,12 +67,27 @@ public class WaveMover : MonoBehaviour {
     void Flipper()
     {
         isFacingRight = !isFacingRight;
-
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
-
-        // Flip collider over the x-axis
-       // center.x = -center.x;
     }
+
+    void ScaleAndLiftWave()
+    {
+        if (transform.localScale.y >= MAX_SCALE_Y)
+            return;
+
+        transform.localScale += new Vector3(INCREASE_SCALE_X * Mathf.Sign(transform.localScale.x), INCREASE_SCALE_Y, 0);
+        pointA += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
+        pointB += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
+    }
+
+    void SpeedIncreaser()
+    {
+        if(timer >= MIN_TIMER_VALUE)
+        {
+            timer -= DECREASE_TIMER_VALUE;
+        }
+    }
+
 }

@@ -11,4 +11,6 @@ public static class GlobalVariables
     public static bool isClientOn = false;
     public static bool hostInitialized = false;
     public static bool clientInitialized = false;
+
+    public static bool waveInstantiated = false;
 }

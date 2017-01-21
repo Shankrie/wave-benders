@@ -6,18 +6,17 @@ using UnityEngine.Networking;
 public class SetupName : NetworkBehaviour {
 
     public GameObject Wave;
-    bool waveInstantiated = false;
    // public WaveMover waveMover;
 
 	// Use this for initialization
 	void Start () {
         NetworkManager nm = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
         GlobalVariables.playerCount++;
-        if (GlobalVariables.playerCount == 2 && waveInstantiated == false)
+        if (GlobalVariables.playerCount == 2 && GlobalVariables.waveInstantiated == false)
         {
             //Wave.GetComponent<WaveMover>().enabled = true;
             Instantiate(Wave);
-            waveInstantiated = true;
+            GlobalVariables.waveInstantiated = true;
 
         }
         if (isLocalPlayer)
