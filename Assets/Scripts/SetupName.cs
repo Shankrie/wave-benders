@@ -19,14 +19,16 @@ public class SetupName : NetworkBehaviour {
             
             GetComponent<Movement>().enabled = true;
             setLocalObjName(GlobalVariables.clientName);
+
+            if (GlobalVariables.playerCount == 2)
+            {
+                //Wave.GetComponent<WaveMover>().enabled = true;
+                Instantiate(Wave);
+                Debug.Log("Hey");
+            }
         }
 
-        if (nm.IsClientConnected() nm.client.) 
-        {
-            //Wave.GetComponent<WaveMover>().enabled = true;
-            Instantiate(Wave);
-            Debug.Log("Hey");
-        }
+        
 
     }
 
