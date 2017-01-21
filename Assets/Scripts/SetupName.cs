@@ -5,13 +5,27 @@ using UnityEngine.Networking;
 
 public class SetupName : NetworkBehaviour {
 
-	void Start()
-    {
+    public GameObject Wave;
+
+   // public WaveMover waveMover;
+
+	// Use this for initialization
+	void Start () {
+        NetworkManager nm = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+        
         if (isLocalPlayer)
         {
+            GlobalVariables.playerCount++;
             
             GetComponent<Movement>().enabled = true;
             setLocalObjName(GlobalVariables.clientName);
+        }
+
+        if (nm.IsClientConnected() nm.client.) 
+        {
+            //Wave.GetComponent<WaveMover>().enabled = true;
+            Instantiate(Wave);
+            Debug.Log("Hey");
         }
 
     }
@@ -28,7 +42,7 @@ public class SetupName : NetworkBehaviour {
             GetComponentInChildren<TextMesh>().text = GlobalVariables.clientName;
             GlobalVariables.clientInitialized = true;
         }
+        
     }
-
-
+	
 }

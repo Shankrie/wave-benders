@@ -48,7 +48,7 @@ namespace UnityEngine.Networking
                 if (Input.GetKeyDown(KeyCode.C))
                 {
                     manager.StartClient();
-                    GlobalVariables.isClientOn = true;
+
                 }
             }
             if (NetworkServer.active && manager.IsClientConnected())
