@@ -29,12 +29,9 @@ public class SetupName : NetworkBehaviour {
             
             
         }
-
+     //   Debug.Log(GlobalVariables.playerCount);
         Debug.Log(GlobalVariables.playerCount);
         Debug.Log("Hey");
-
-
-
     }
 
     public void setLocalObjName(string newName)

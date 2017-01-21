@@ -58,6 +58,7 @@ public class WaveMover : MonoBehaviour {
                 Flipper();
                 ScaleAndLiftWave();
                 SpeedIncreaser();
+                PlayWaveRising();
             }
             thisTransform.position = Vector3.Lerp(pointA, pointB, i);
             yield return null;
@@ -90,4 +91,10 @@ public class WaveMover : MonoBehaviour {
         }
     }
 
+    void PlayWaveRising()
+    {
+        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = Resources.Load("waveRising") as AudioClip;
+        audioSource.Play();
+    }
 }
