@@ -70,30 +70,38 @@ namespace UnityEngine.Networking
             bool noConnection = (manager.client == null || manager.client.connection == null ||
                                  manager.client.connection.connectionId == -1);
 
+
             if (!manager.IsClientConnected() && !NetworkServer.active && manager.matchMaker == null)
             {
+
                 if (noConnection)
                 {
                     if (UnityEngine.Application.platform != RuntimePlatform.WebGLPlayer)
                     {
                         if (GUI.Button(new Rect(xpos, ypos, 200, 20), "LAN Host(H)"))
                         {
-                            manager.StartHost();
-                            GlobalVariables.isHostOn = true;
+                            if (GlobalVariables.isHostOn == false)
+                            {
+                                manager.StartHost();
+                                GlobalVariables.isHostOn = true;
+                            }
                         }
                         ypos += spacing;
                     }
                   
-                    if( GlobalVariables.isClientOn)
+                    if( GlobalVariables.isClientOn && GlobalVariables.isHostOn)
                     {
-                        GlobalVariables.playerName = GUI.TextArea(new Rect(xpos, ypos, 200, 20), "Max users count reached.");
+                        GUI.TextArea(new Rect(xpos, ypos, 200, 20), "Max users count reached.");
                     }
                     else
                     { 
                         if (GUI.Button(new Rect(xpos, ypos, 105, 20), "LAN Client(C)"))
                         {
-                            manager.StartClient();
-                            GlobalVariables.isClientOn = true;
+                            if (GlobalVariables.isClientOn == false)
+                            {
+                                manager.StartClient();
+                                GlobalVariables.isClientOn = true;
+                            }
                         }
                     }
 
@@ -115,7 +123,7 @@ namespace UnityEngine.Networking
                         ypos += spacing;
                     }
 
-                    GlobalVariables.playerName = GUI.TextField(new Rect(xpos, ypos, 200, 20), GlobalVariables.playerName, 40);
+                    //GlobalVariables.hostName = GUI.TextField(new Rect(xpos, ypos, 200, 20), GlobalVariables.hostName, 40);
                     ypos += spacing;
                 }
                 else
@@ -127,6 +135,7 @@ namespace UnityEngine.Networking
                     if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Cancel Connection Attempt"))
                     {
                         manager.StopClient();
+                        GlobalVariables.isClientOn = false;
                     }
                 }
             }
@@ -168,6 +177,7 @@ namespace UnityEngine.Networking
                 if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Stop (X)"))
                 {
                     manager.StopHost();
+                    GlobalVariables.isHostOn = false;
                 }
                 ypos += spacing;
             }

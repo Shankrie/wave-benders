@@ -4,33 +4,38 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 public class SetupName : NetworkBehaviour {
-    public TextMesh tm;
+    [SyncVar]
+    string playerName = "player";
 
-
-	// Use this for initialization
-	void Start () {
-		if(!isLocalPlayer)
+	void Start()
+    {
+        if(isLocalPlayer)
         {
-            Destroy(this);
-            return;
+            GetComponent<Movement>().enabled = true;
         }
+    }
 
-        Debug.Log(GlobalVariables.playerCount);
-        Debug.Log(GlobalVariables.playerName);
-        if (GlobalVariables.playerName == "")
+	void OnGUI ()
+    {
+        playerName = GUI.TextField(new Rect(25, Screen.height - 40, 100, 30), playerName);
+        if(GUI.Button(new Rect(130, Screen.height - 40, 80, 30), "Change"))
         {
-            if (GlobalVariables.playerCount % 2 == 1)
-                tm.text = "Player B";
-            else
-                tm.text = "Player A";
-
+            CmdChangeName(playerName);
         }
-        else
+    }
+
+    void Update()
+    {
+        if(isLocalPlayer)
         {
-            if(tm.text == "")
-                tm.text = GlobalVariables.playerName;
-        }        
-        GlobalVariables.playerCount++;
-	}
+            GetComponentInChildren<TextMesh>().text = playerName;
+        }
+    }
+
+    [Command]
+    public void CmdChangeName(string newName)
+    {
+        playerName = newName;
+    }
 	
 }

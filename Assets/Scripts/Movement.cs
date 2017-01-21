@@ -2,17 +2,8 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Movement : NetworkBehaviour {
+public class Movement : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-        if(!isLocalPlayer)
-        {
-            Destroy(this);
-            return;
-        }
-    }
-	
 	// Update is called once per frame
 	void Update ()
     {
