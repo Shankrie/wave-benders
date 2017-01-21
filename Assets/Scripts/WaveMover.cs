@@ -38,17 +38,8 @@ public class WaveMover : MonoBehaviour {
     {
         pointB = Bposition.position;
         pointA = Aposition.position;
-<<<<<<< HEAD
-
-        
-
         while (true)
         {
-            
-=======
-        while (true)
-        {
->>>>>>> fb34cc53a11d91eaf0e7177f616800deda18c02e
             yield return StartCoroutine(MoveObject(transform, pointA, pointB, 3.0f));
             yield return StartCoroutine(MoveObject(transform, pointB, pointA, 3.0f));
         }
@@ -69,10 +60,7 @@ public class WaveMover : MonoBehaviour {
             i += Time.deltaTime * rate;
             thisTransform.position = Vector3.Lerp(startPos, endPos, i);
             if (thisTransform.position == pointB || thisTransform.position == pointA) Flipper();
-<<<<<<< HEAD
             PlayWaveRising();
-=======
->>>>>>> fb34cc53a11d91eaf0e7177f616800deda18c02e
             yield return null;
         }
     }
@@ -88,14 +76,10 @@ public class WaveMover : MonoBehaviour {
         // Flip collider over the x-axis
        // center.x = -center.x;
     }
-<<<<<<< HEAD
-
     void PlayWaveRising()
     {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
         audioSource.Play();
     }
-=======
->>>>>>> fb34cc53a11d91eaf0e7177f616800deda18c02e
 }
