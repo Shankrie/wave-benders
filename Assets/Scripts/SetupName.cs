@@ -4,38 +4,31 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 public class SetupName : NetworkBehaviour {
-    [SyncVar]
-    string playerName = "player";
 
 	void Start()
     {
-        if(isLocalPlayer)
+        if (isLocalPlayer)
         {
+            
             GetComponent<Movement>().enabled = true;
+            setLocalObjName(GlobalVariables.clientName);
         }
+
     }
 
-	void OnGUI ()
+    public void setLocalObjName(string newName)
     {
-        playerName = GUI.TextField(new Rect(25, Screen.height - 40, 100, 30), playerName);
-        if(GUI.Button(new Rect(130, Screen.height - 40, 80, 30), "Change"))
+        if(GlobalVariables.isHostOn == true && GlobalVariables.hostInitialized == false)
         {
-            CmdChangeName(playerName);
+            GetComponentInChildren<TextMesh>().text = GlobalVariables.hostName;
+            GlobalVariables.hostInitialized = true;
         }
-    }
-
-    void Update()
-    {
-        if(isLocalPlayer)
+        else if(GlobalVariables.isClientOn == true && GlobalVariables.clientInitialized == false)
         {
-            GetComponentInChildren<TextMesh>().text = playerName;
+            GetComponentInChildren<TextMesh>().text = GlobalVariables.clientName;
+            GlobalVariables.clientInitialized = true;
         }
     }
 
-    [Command]
-    public void CmdChangeName(string newName)
-    {
-        playerName = newName;
-    }
-	
+
 }

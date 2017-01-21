@@ -42,11 +42,13 @@ namespace UnityEngine.Networking
                     if (Input.GetKeyDown(KeyCode.H))
                     {
                         manager.StartHost();
+                        GlobalVariables.isHostOn = true;
                     }
                 }
                 if (Input.GetKeyDown(KeyCode.C))
                 {
                     manager.StartClient();
+                    GlobalVariables.isClientOn = true;
                 }
             }
             if (NetworkServer.active && manager.IsClientConnected())
@@ -99,8 +101,8 @@ namespace UnityEngine.Networking
                         {
                             if (GlobalVariables.isClientOn == false)
                             {
-                                manager.StartClient();
                                 GlobalVariables.isClientOn = true;
+                                manager.StartClient();                         
                             }
                         }
                     }
@@ -123,7 +125,9 @@ namespace UnityEngine.Networking
                         ypos += spacing;
                     }
 
-                    //GlobalVariables.hostName = GUI.TextField(new Rect(xpos, ypos, 200, 20), GlobalVariables.hostName, 40);
+                    GlobalVariables.hostName = GUI.TextField(new Rect(xpos, ypos, 200, 20), GlobalVariables.hostName, 40);
+                    ypos += spacing;
+                    GlobalVariables.clientName = GUI.TextField(new Rect(xpos, ypos, 250, 20), GlobalVariables.clientName, 40);
                     ypos += spacing;
                 }
                 else
