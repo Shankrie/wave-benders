@@ -14,7 +14,7 @@ public class SetupName : NetworkBehaviour {
 
         NetworkManager nm = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
         GlobalVariables.playerCount++;
-        if (GlobalVariables.playerCount == 2 && GlobalVariables.waveInstantiated == false)
+        if (GlobalVariables.playerCount == 1 && GlobalVariables.waveInstantiated == false)
         {
             //Wave.GetComponent<WaveMover>().enabled = true;
             Instantiate(Wave);
