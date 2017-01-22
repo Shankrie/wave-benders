@@ -43,7 +43,7 @@ public class WaveMover : MonoBehaviour {
         maxEndXPoint = Bposition.position.x;
         //StartCoroutine(MoveOverSeconds());
         journeyLength = Vector3.Distance(startPosition, overflowPointB);
-        ParticleSystem ps = GetComponent<ParticleSystem>();
+        ParticleSystem ps = GameObject.FindGameObjectWithTag("ParticleSystem").GetComponent<ParticleSystem>();
         ps.GetComponent<Renderer>().sortingLayerName = "Foreground";
     }
 

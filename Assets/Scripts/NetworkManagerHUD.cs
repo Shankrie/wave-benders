@@ -145,21 +145,21 @@ namespace UnityEngine.Networking
             }
             else
             {
-                if (NetworkServer.active)
-                {
-                    string serverMsg = "Server: port=" + manager.networkPort;
-                    if (manager.useWebSockets)
-                    {
-                        serverMsg += " (Using WebSockets)";
-                    }
-                    GUI.Label(new Rect(xpos, ypos, 300, 20), serverMsg);
-                    ypos += spacing;
-                }
-                if (manager.IsClientConnected())
-                {
-                    GUI.Label(new Rect(xpos, ypos, 300, 20), "Client: address=" + manager.networkAddress + " port=" + manager.networkPort);
-                    ypos += spacing;
-                }
+                //if (NetworkServer.active)
+                //{
+                //    string serverMsg = "Server: port=" + manager.networkPort;
+                //    if (manager.useWebSockets)
+                //    {
+                //        serverMsg += " (Using WebSockets)";
+                //    }
+                //    GUI.Label(new Rect(xpos, ypos, 300, 20), serverMsg);
+                //    ypos += spacing;
+                //}
+                //if (manager.IsClientConnected())
+                //{
+                //    GUI.Label(new Rect(xpos, ypos, 300, 20), "Client: address=" + manager.networkAddress + " port=" + manager.networkPort);
+                //    ypos += spacing;
+                //}
             }
 
             if (manager.IsClientConnected() && !ClientScene.ready)
