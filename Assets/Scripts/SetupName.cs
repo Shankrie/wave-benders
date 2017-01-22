@@ -7,7 +7,6 @@ public class SetupName : NetworkBehaviour {
 
     public GameObject Wave;
     public GameObject KeyGen;
-    bool waveInstantiated = false;
    // public WaveMover waveMover;
 
     // Use this for initialization
@@ -15,11 +14,11 @@ public class SetupName : NetworkBehaviour {
 
         NetworkManager nm = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
         GlobalVariables.playerCount++;
-        if (GlobalVariables.playerCount == 2 && waveInstantiated == false)
+        if (GlobalVariables.playerCount == 2 && GlobalVariables.waveInstantiated == false)
         {
             //Wave.GetComponent<WaveMover>().enabled = true;
             Instantiate(Wave);
-            waveInstantiated = true;
+            GlobalVariables.waveInstantiated = true;
             
             if (!NetworkServer.active)
                 CmdSpawn();
@@ -33,12 +32,9 @@ public class SetupName : NetworkBehaviour {
 
 
         }
-
+     //   Debug.Log(GlobalVariables.playerCount);
         Debug.Log(GlobalVariables.playerCount);
         Debug.Log("Hey");
-
-
-
     }
 
     [Command]
