@@ -56,6 +56,7 @@ namespace UnityEngine.Networking
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
                     manager.StopHost();
+                    GlobalVariables.playerCount--;
                 }
             }
         }
@@ -90,19 +91,19 @@ namespace UnityEngine.Networking
                         }
                         ypos += spacing;
                     }
-                  
-                    if( GlobalVariables.isClientOn && GlobalVariables.isHostOn)
+
+                    if (GlobalVariables.isClientOn && GlobalVariables.isHostOn)
                     {
                         GUI.TextArea(new Rect(xpos, ypos, 200, 20), "Max users count reached.");
                     }
                     else
-                    { 
+                    {
                         if (GUI.Button(new Rect(xpos, ypos, 105, 20), "LAN Client(C)"))
                         {
                             if (GlobalVariables.isClientOn == false)
                             {
                                 GlobalVariables.isClientOn = true;
-                                manager.StartClient();                         
+                                manager.StartClient();
                             }
                         }
                     }
@@ -124,11 +125,6 @@ namespace UnityEngine.Networking
                         }
                         ypos += spacing;
                     }
-
-                    GlobalVariables.hostName = GUI.TextField(new Rect(xpos, ypos, 200, 20), GlobalVariables.hostName, 40);
-                    ypos += spacing;
-                    GlobalVariables.clientName = GUI.TextField(new Rect(xpos, ypos, 250, 20), GlobalVariables.clientName, 40);
-                    ypos += spacing;
                 }
                 else
                 {
@@ -139,7 +135,7 @@ namespace UnityEngine.Networking
                     if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Cancel Connection Attempt"))
                     {
                         manager.StopClient();
-                        GlobalVariables.isClientOn = false;
+                        GlobalVariables.playerCount--;
                     }
                 }
             }
@@ -155,11 +151,12 @@ namespace UnityEngine.Networking
                 //    GUI.Label(new Rect(xpos, ypos, 300, 20), serverMsg);
                 //    ypos += spacing;
                 //}
-                //if (manager.IsClientConnected())
-                //{
-                //    GUI.Label(new Rect(xpos, ypos, 300, 20), "Client: address=" + manager.networkAddress + " port=" + manager.networkPort);
-                //    ypos += spacing;
-                //}
+                if (manager.IsClientConnected())
+                {
+                    GUI.Label(new Rect(xpos, ypos, 300, 20), "Client: address: " + manager.client.serverIp + ", port:" + manager.networkPort);
+                    ypos += spacing;
+                }
+
             }
 
             if (manager.IsClientConnected() && !ClientScene.ready)

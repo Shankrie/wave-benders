@@ -14,7 +14,7 @@ public class SetupName : NetworkBehaviour {
 
         NetworkManager nm = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
         GlobalVariables.playerCount++;
-        if (GlobalVariables.playerCount == 1 && GlobalVariables.waveInstantiated == false)
+        if (GlobalVariables.playerCount == 2 && GlobalVariables.waveInstantiated == false)
         {
             //Wave.GetComponent<WaveMover>().enabled = true;
             Instantiate(Wave);
@@ -35,6 +35,20 @@ public class SetupName : NetworkBehaviour {
      //   Debug.Log(GlobalVariables.playerCount);
         Debug.Log(GlobalVariables.playerCount);
         Debug.Log("Hey");
+    }
+
+    private void Update()
+    {
+        if(GlobalVariables.waveInstantiated == true && GlobalVariables.playerCount < 2)
+        {
+            Destroy(Wave);
+            GlobalVariables.waveInstantiated = false;
+        }
+        else if(GlobalVariables.waveInstantiated == false && GlobalVariables.playerCount == 2)
+        {
+            Instantiate(Wave);
+            GlobalVariables.waveInstantiated = true;
+        }
     }
 
     [Command]
