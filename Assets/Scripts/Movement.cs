@@ -21,6 +21,9 @@ public class Movement : NetworkBehaviour {
 
         keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
 
+        //Debug.Log("hostmove " + (keyGen.hostMove && !NetworkServer.active));
+        //Debug.Log("nothostmove " + (!keyGen.hostMove && NetworkServer.active));
+
         if (keyGen.hostMove && !NetworkServer.active)
             return;
 
@@ -31,12 +34,9 @@ public class Movement : NetworkBehaviour {
         {
             Key key = keyGen.spawnedKeys[index];
             KeyCode keyToEnter = keyGen.keyCodesDic[key.KeyIndex];
-            //Debug.Log(keyToEnter);
 
             if (Input.GetKeyDown(keyToEnter))
             {
-                //key.KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
-
                 keyGen.CmdGreyOutKey(index);
 
                 index++;
@@ -44,21 +44,23 @@ public class Movement : NetworkBehaviour {
 
             if (index == keyGen.spawnedKeys.Count)
             {
-                RpcSetDeflectWave();
+                keyGen.CmdDeflectWave();
                 keyGen.CmdDestroySpawnedKeys();
+                keyGen.generateKeys();
+                index = 0;
             }
                 
         }
     }
 
     [Command]
-    private void CmdSetDeflectWave()
+    public void CmdSetDeflectWave()
     {
         RpcSetDeflectWave();
     }
 
     [ClientRpc]
-    private void RpcSetDeflectWave()
+    public void RpcSetDeflectWave()
     {
         GlobalVariables.sendWaveAway = true;
     }
