@@ -34,6 +34,11 @@ public class LoseController : MonoBehaviour {
             int pozX = Mathf.RoundToInt(transform.position.x);
             transform.position = Vector3.Lerp(startPoint, endPoint.position, fracDistance);
             transform.Rotate(0, 0, 10 * Mathf.Sign(pozX));
+
+            if(transform.position.y >= endPoint.position.y - 0.1f)
+            {
+                Destroy(this);
+            }
         }
     }
 }
