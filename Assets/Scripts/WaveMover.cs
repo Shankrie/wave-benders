@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class WaveMover : MonoBehaviour {
-    public Transform WaveParent;
 
     public Transform Aposition;
     public Transform Bposition;
@@ -11,9 +10,13 @@ public class WaveMover : MonoBehaviour {
     private Vector3 pointB;
     private Vector3 pointA;
 
+    private Vector3 overflowPointA;
+    private Vector3 overflowPointB;                 
+
     private float timer = 4.0f;
 
     private bool isFacingRight = true;
+    private bool haveReachedEnd = false;
 
     const float INCREASE_SCALE_Y = 0.05f;
     const float INCREASE_SCALE_X = 0.025f;
@@ -23,11 +26,13 @@ public class WaveMover : MonoBehaviour {
 
     IEnumerator Start()
     {
+        
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
         pointA = Aposition.position;
         pointB = Bposition.position;
+        overflowPointA = pointA + new Vector3(3, 0, 0);
         Vector3 temp;
-        while (true)    
+        while (GlobalVariables.sendWaveAway == true)    
         {
             yield return StartCoroutine(MoveObject(transform, timer));
             temp = pointA;

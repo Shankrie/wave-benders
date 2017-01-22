@@ -53,7 +53,7 @@ namespace UnityEngine.Networking
             }
             if (NetworkServer.active && manager.IsClientConnected())
             {
-                if (Input.GetKeyDown(KeyCode.X))
+                if (Input.GetKeyDown(KeyCode.Escape))
                 {
                     manager.StopHost();
                 }
@@ -178,12 +178,12 @@ namespace UnityEngine.Networking
 
             if (NetworkServer.active || manager.IsClientConnected())
             {
-                if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Stop (X)"))
-                {
-                    manager.StopHost();
-                    GlobalVariables.isHostOn = false;
-                }
-                ypos += spacing;
+                //if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Stop (X)"))
+                //{
+                //    manager.StopHost();
+                //    GlobalVariables.isHostOn = false;
+                //}
+                //ypos += spacing;
             }
 
             if (!NetworkServer.active && !manager.IsClientConnected() && noConnection)
