@@ -92,10 +92,12 @@ public class WaveMover : NetworkBehaviour {
             if (keyGen.hostMove)
             {
                 playerAvatar = GameObject.Find("Seal");
+                PlaySealBark();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
             }
             else {
                 playerAvatar = GameObject.Find("Penguin");
+                PlayPenguinBattleCry();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
             }
 
@@ -157,6 +159,7 @@ public class WaveMover : NetworkBehaviour {
 
     void PlayWaveRising(bool looper)
     {
+        if (looper == false) return;
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
         audioSource.Play();
