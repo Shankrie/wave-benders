@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class WaveMover : MonoBehaviour {
+public class WaveMover : NetworkBehaviour {
 
     public Transform Aposition;
     public Transform Bposition;
@@ -33,7 +34,7 @@ public class WaveMover : MonoBehaviour {
 
     void Start()
     {
-        PlayWaveRising();
+        PlayWaveRising(true);
         time = Time.time;
         startPosition = transform.position;
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
@@ -42,9 +43,7 @@ public class WaveMover : MonoBehaviour {
         maxStartXPoint = Aposition.position.x;
         maxEndXPoint = Bposition.position.x;
         //StartCoroutine(MoveOverSeconds());
-        journeyLength = Vector3.Distance(startPosition, overflowPointB);
-        ParticleSystem ps = GameObject.FindGameObjectWithTag("ParticleSystem").GetComponent<ParticleSystem>();
-        ps.GetComponent<Renderer>().sortingLayerName = "Foreground";
+        journeyLength = Vector3.Distance(startPosition, overflowPointB);   
     }
 
     //public IEnumerator MoveOverSeconds()
@@ -65,26 +64,42 @@ public class WaveMover : MonoBehaviour {
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
         checkOverflowPoints();
-
+        if (checkReachedEnd == true) PlayWaveRising(false);
         if (GameObject.Find("KeyGen(Clone)") == null)
             return;
 
         keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
 
-        if (keyGen.deflectWave)
+        if (checkReachedEnd)
+        {
+            GameObject playerAvatar;
+            if (keyGen.hostMove)
+            {
+                playerAvatar = GameObject.Find("Penguin");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+            else
+            {
+                playerAvatar = GameObject.Find("Seal");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+
+            return;
+        }
+        else if (keyGen.deflectWave)
         {
             GameObject playerAvatar;
             if (keyGen.hostMove)
             {
                 playerAvatar = GameObject.Find("Seal");
-                PlaySealBark();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
             }
             else {
                 playerAvatar = GameObject.Find("Penguin");
-                PlayPenguinBattleCry();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
-            } 
+            }
+
+
 
             if (!deflectWave())
             {
@@ -140,12 +155,12 @@ public class WaveMover : MonoBehaviour {
     }
 
 
-    void PlayWaveRising()
+    void PlayWaveRising(bool looper)
     {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
         audioSource.Play();
-        audioSource.loop = true;
+        audioSource.loop = looper;
     }
     void PlaySealBark()
     {
@@ -159,6 +174,7 @@ public class WaveMover : MonoBehaviour {
         audioSource.clip = Resources.Load("penguinBattleCry") as AudioClip;
         audioSource.Play();
     }
+
     public bool deflectWave()
     {
         if (checkReachedEnd == true)
