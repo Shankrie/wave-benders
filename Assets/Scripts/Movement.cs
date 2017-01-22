@@ -2,14 +2,37 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Movement : MonoBehaviour {
+public class Movement : NetworkBehaviour {
 
-	// Update is called once per frame
-	void Update ()
+    public GameObject KeyGenObject;
+    private KeyGenerator keyGen;
+    private int index = 0;
+
+    void Start()
     {
-        float translation = CrossPlatformInputManager.GetAxis("Horizontal") * 5 * Time.deltaTime;
-        transform.Translate(translation, 0, 0);
+        
     }
 
+    // Update is called once per frame
+    void Update ()
+    {
+        if (GameObject.Find("KeyGen(Clone)") == null)
+            return;
 
+
+        keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
+
+        if (index < keyGen.spawnedKeys.Count)
+        {
+            Key key = keyGen.spawnedKeys[index];
+            KeyCode keyToEnter = keyGen.keyCodesDic[key.KeyIndex];
+            //Debug.Log(keyToEnter);
+
+            if (Input.GetKeyDown(keyToEnter))
+            {
+                key.KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+                index++;
+            }
+        }
+    }
 }
