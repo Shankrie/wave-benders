@@ -32,16 +32,13 @@ public class WaveMover : MonoBehaviour {
         pointB = Bposition.position;
         overflowPointA = pointA + new Vector3(3, 0, 0);
         Vector3 temp;
-        while (GlobalVariables.sendWaveAway == true)    
+        while (true)    
         {
             yield return StartCoroutine(MoveObject(transform, timer));
             temp = pointA;
             pointA = pointB;
             pointB = temp;
-            yield return StartCoroutine(MoveObject(transform, timer));
-            temp = pointA;
-            pointA = pointB;
-            pointB = temp;
+
         }    
     }
     
