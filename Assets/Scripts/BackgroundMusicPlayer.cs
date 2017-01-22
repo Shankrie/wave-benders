@@ -23,17 +23,7 @@ public class BackgroundMusicPlayer : MonoBehaviour
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("Ocean") as AudioClip;
         audioSource.Play();
+        audioSource.loop = true;
     }
-    void PlaySealBark()
-    {
-        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = Resources.Load("sealBarking") as AudioClip;
-        audioSource.Play();
-    }
-    void PlayPenguinBattleCry()
-    {
-        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = Resources.Load("penguinBattleCry") as AudioClip;
-        audioSource.Play();
-    }
+  
 }
