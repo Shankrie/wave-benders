@@ -58,6 +58,11 @@ public class WaveMover : MonoBehaviour {
 
     private void Update()
     {
+        if(notReachedEnd == false)
+        {
+            Destroy(this);
+            return;  
+        }
         float dTime = (Time.time - time) * speed;
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
@@ -131,8 +136,13 @@ public class WaveMover : MonoBehaviour {
         audioSource.Play();
     }
 
-    public void deflectWave()
+    public bool deflectWave()
     {
+        if(checkReachedEnd == true)
+        {
+            return false;
+        }
+
         // Recalulacting journey length with current position
         startPosition = transform.position;
         Vector3 temp = overflowPointA;
@@ -145,6 +155,10 @@ public class WaveMover : MonoBehaviour {
         Flipper();
         ScaleAndLiftWave();
         PlayWaveRising();
+
+        speed += 0.25f;
+
+        return true;
     }
 
 }
