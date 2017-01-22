@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class WaveMover : MonoBehaviour {
+public class WaveMover : NetworkBehaviour {
 
     public Transform Aposition;
     public Transform Bposition;
@@ -41,9 +42,7 @@ public class WaveMover : MonoBehaviour {
         maxStartXPoint = Aposition.position.x;
         maxEndXPoint = Bposition.position.x;
         //StartCoroutine(MoveOverSeconds());
-        journeyLength = Vector3.Distance(startPosition, overflowPointB);
-        ParticleSystem ps = GameObject.FindGameObjectWithTag("ParticleSystem").GetComponent<ParticleSystem>();
-        ps.GetComponent<Renderer>().sortingLayerName = "Foreground";
+        journeyLength = Vector3.Distance(startPosition, overflowPointB);   
     }
 
     //public IEnumerator MoveOverSeconds()
@@ -86,8 +85,7 @@ public class WaveMover : MonoBehaviour {
 
             return;
         }
-
-        if (keyGen.deflectWave)
+        else if (keyGen.deflectWave)
         {
             GameObject playerAvatar;
             if (keyGen.hostMove)
