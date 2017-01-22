@@ -64,6 +64,12 @@ public class WaveMover : NetworkBehaviour {
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
         checkOverflowPoints();
+
+        if (notReachedEnd == false)
+        {
+            Destroy(gameObject);
+        }
+
         if (checkReachedEnd == true) PlayWaveRising(false);
         if (GameObject.Find("KeyGen(Clone)") == null)
             return;
@@ -121,6 +127,8 @@ public class WaveMover : NetworkBehaviour {
                 keyGen.difficulty++;
             }
         }
+
+        
     }
 
     void checkOverflowPoints()
