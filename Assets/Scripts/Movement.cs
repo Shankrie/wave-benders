@@ -42,13 +42,24 @@ public class Movement : NetworkBehaviour {
                 index++;
             }
 
-            Debug.Log(index);
-
             if (index == keyGen.spawnedKeys.Count)
             {
+                RpcSetDeflectWave();
                 keyGen.CmdDestroySpawnedKeys();
             }
                 
         }
+    }
+
+    [Command]
+    private void CmdSetDeflectWave()
+    {
+        RpcSetDeflectWave();
+    }
+
+    [ClientRpc]
+    private void RpcSetDeflectWave()
+    {
+        GlobalVariables.sendWaveAway = true;
     }
 }
