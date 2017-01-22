@@ -75,6 +75,19 @@ public class WaveMover : MonoBehaviour {
 
         if (keyGen.deflectWave)
         {
+            GameObject playerAvatar;
+            if (keyGen.hostMove)
+            {
+                playerAvatar = GameObject.Find("Seal");
+                playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
+            }
+            else {
+                playerAvatar = GameObject.Find("Penguin");
+                playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
+            }
+
+            
+
             deflectWave();
             keyGen.deflectWave = false;
             if (keyGen.difficulty < 9)
