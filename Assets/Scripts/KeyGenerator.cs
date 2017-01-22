@@ -13,19 +13,28 @@ public class KeyGenerator : NetworkBehaviour {
     public List<Key> spawnedKeys = new List<Key>();
     private List<Transform> allKeys = new List<Transform>();
 
-    private int difficulty = 0;
+    [SyncVar]
+    public int difficulty = 0;
     private Dictionary<int, int> difficultyDic = new Dictionary<int, int>();
 
     [SyncVar]
     public bool hostMove = true;
 
+    [SyncVar]
+    public bool deflectWave = false;
+
     void Start () {
 
         difficultyDic.Add(0, 3);
-        difficultyDic.Add(1, 4);
-        difficultyDic.Add(2, 5);
-        difficultyDic.Add(3, 6);
-        difficultyDic.Add(4, 7);
+        difficultyDic.Add(1, 3);
+        difficultyDic.Add(2, 4);
+        difficultyDic.Add(3, 4);
+        difficultyDic.Add(4, 5);
+        difficultyDic.Add(5, 5);
+        difficultyDic.Add(6, 6);
+        difficultyDic.Add(7, 6);
+        difficultyDic.Add(8, 7);
+        difficultyDic.Add(9, 7);
 
         keyCodesDic.Add(0, KeyCode.Q);
         keyCodesDic.Add(1, KeyCode.W);
@@ -63,7 +72,7 @@ public class KeyGenerator : NetworkBehaviour {
             generateKeys();        
     }
 
-    private void generateKeys()
+    public void generateKeys()
     {
         CmdPaint();
     }
@@ -106,11 +115,13 @@ public class KeyGenerator : NetworkBehaviour {
         }
 
         NetworkIdentity objNetId = GetComponent<NetworkIdentity>();
-        if (objNetId.hasAuthority)
-            objNetId.RemoveClientAuthority(connectionToClient);// get the object's network ID
-        objNetId.AssignClientAuthority(connectionToClient);    // assign authority to the player who is changing the color
+        if (!NetworkServer.active)
+            objNetId.AssignClientAuthority(connectionToClient);    // assign authority to the player who is changing the color
+        
         RpcPaint(selKeys);                                    // usse a Client RPC function to "paint" the object on all clients
-        objNetId.RemoveClientAuthority(connectionToClient);    // remove the authority from the player who changed the color
+
+        if (!NetworkServer.active)
+            objNetId.RemoveClientAuthority(connectionToClient);    // remove the authority from the player who changed the color
     }
 
     [Command]
@@ -128,6 +139,7 @@ public class KeyGenerator : NetworkBehaviour {
         }
 
         spawnedKeys = new List<Key>();
+        hostMove = !hostMove;
     }
 
     [Command]
@@ -140,5 +152,17 @@ public class KeyGenerator : NetworkBehaviour {
     private void RpcGreyOutKey(int index)
     {
         spawnedKeys[index].KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+    }
+
+    [Command]
+    public void CmdDeflectWave()
+    {
+        RpcDeflectWave();
+    }
+
+    [ClientRpc]
+    private void RpcDeflectWave()
+    {
+        deflectWave = true;
     }
 }
