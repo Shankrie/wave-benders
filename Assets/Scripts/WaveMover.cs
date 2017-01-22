@@ -71,20 +71,37 @@ public class WaveMover : MonoBehaviour {
 
         keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
 
+        if (checkReachedEnd)
+        {
+            GameObject playerAvatar;
+            if (keyGen.hostMove)
+            {
+                playerAvatar = GameObject.Find("Penguin");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+            else
+            {
+                playerAvatar = GameObject.Find("Seal");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+
+            return;
+        }
+
         if (keyGen.deflectWave)
         {
             GameObject playerAvatar;
             if (keyGen.hostMove)
             {
                 playerAvatar = GameObject.Find("Seal");
-                PlaySealBark();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
             }
             else {
                 playerAvatar = GameObject.Find("Penguin");
-                PlayPenguinBattleCry();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
-            } 
+            }
+
+
 
             if (!deflectWave())
             {
@@ -159,6 +176,7 @@ public class WaveMover : MonoBehaviour {
         audioSource.clip = Resources.Load("penguinBattleCry") as AudioClip;
         audioSource.Play();
     }
+
     public bool deflectWave()
     {
         if (checkReachedEnd == true)
