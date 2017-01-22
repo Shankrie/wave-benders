@@ -19,8 +19,13 @@ public class Movement : NetworkBehaviour {
         if (GameObject.Find("KeyGen(Clone)") == null)
             return;
 
-
         keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
+
+        if (keyGen.hostMove && !NetworkServer.active)
+            return;
+
+        if (!keyGen.hostMove && NetworkServer.active)
+            return;
 
         if (index < keyGen.spawnedKeys.Count)
         {
@@ -30,9 +35,20 @@ public class Movement : NetworkBehaviour {
 
             if (Input.GetKeyDown(keyToEnter))
             {
-                key.KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+                //key.KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+
+                keyGen.CmdGreyOutKey(index);
+
                 index++;
             }
+
+            Debug.Log(index);
+
+            if (index == keyGen.spawnedKeys.Count)
+            {
+                keyGen.CmdDestroySpawnedKeys();
+            }
+                
         }
     }
 }
