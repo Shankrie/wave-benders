@@ -33,7 +33,6 @@ public class WaveMover : MonoBehaviour {
 
     void Start()
     {
-        PlayWaveRising();
         time = Time.time;
         startPosition = transform.position;
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
@@ -69,20 +68,37 @@ public class WaveMover : MonoBehaviour {
 
         keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
 
+        if (checkReachedEnd)
+        {
+            GameObject playerAvatar;
+            if (keyGen.hostMove)
+            {
+                playerAvatar = GameObject.Find("Penguin");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+            else
+            {
+                playerAvatar = GameObject.Find("Seal");
+                playerAvatar.GetComponent<LoseController>().playerHaveLost();
+            }
+
+            return;
+        }
+
         if (keyGen.deflectWave)
         {
             GameObject playerAvatar;
             if (keyGen.hostMove)
             {
                 playerAvatar = GameObject.Find("Seal");
-                PlaySealBark();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
             }
             else {
                 playerAvatar = GameObject.Find("Penguin");
-                PlayPenguinBattleCry();
                 playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
-            } 
+            }
+
+
 
             if (!deflectWave())
             {
@@ -143,20 +159,8 @@ public class WaveMover : MonoBehaviour {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
         audioSource.Play();
-        audioSource.loop = true;
     }
-    void PlaySealBark()
-    {
-        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = Resources.Load("sealBarking") as AudioClip;
-        audioSource.Play();
-    }
-    void PlayPenguinBattleCry()
-    {
-        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = Resources.Load("penguinBattleCry") as AudioClip;
-        audioSource.Play();
-    }
+
     public bool deflectWave()
     {
         if (checkReachedEnd == true)
@@ -175,6 +179,8 @@ public class WaveMover : MonoBehaviour {
         // Fliping scaling object
         Flipper();
         ScaleAndLiftWave();
+        PlayWaveRising();
+
         speed += 0.25f;
 
         return true;
