@@ -9,11 +9,13 @@ public class WaveMover : MonoBehaviour {
 
     private Vector3 overflowPointA;
     private Vector3 overflowPointB;
+    private Vector3 startPosition;
 
     private float maxEndXPoint;
     private float maxStartXPoint;
-    private float speed = 5.0f;
-    private float time = 10f;
+    private float speed = 1.0f;
+    private float time;
+    private float journeyLength;
 
     private bool isFacingRight = true;
     private bool notReachedEnd = true;
@@ -28,67 +30,50 @@ public class WaveMover : MonoBehaviour {
 
     void Start()
     {
+        time = Time.time;
+        startPosition = transform.position;
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
         overflowPointA = Aposition.position + new Vector3(-5, 0, 0);
         overflowPointB = Bposition.position + new Vector3(5, 0, 0);
         maxStartXPoint = Aposition.position.x;
         maxEndXPoint = Bposition.position.x;
-        MoveOverSpeed();
-        StartCoroutine(MoveOverSeconds());
+        //StartCoroutine(MoveOverSeconds());
+        journeyLength = Vector3.Distance(startPosition, overflowPointB);   
     }
 
-    public IEnumerator MoveOverSpeed()
-    {
-        // speed should be 1 unit per second
-        while (true)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, overflowPointB, speed * Time.deltaTime);
-            yield return new WaitForEndOfFrame();
-        }
-    }
-
-    public IEnumerator MoveOverSeconds()
-    {
-        float elapsedTime = 0;
-        Vector3 startingPos = transform.position;
-        while (elapsedTime < time)
-        {
-            transform.position = Vector3.Lerp(transform.position, overflowPointB, (elapsedTime / time));
-            elapsedTime += Time.deltaTime;
-            yield return new WaitForEndOfFrame();
-        }
-        //transform.position = end;
-    }
-
-    //void Update()
+    //public IEnumerator MoveOverSeconds()
     //{
-    //    if (checkReachedEnd == false && (transform.position.x <= maxStartXPoint || transform.position.x >= maxEndXPoint))
+    //    float elapsedTime = 0;
+    //    while (true)
     //    {
-    //        checkReachedEnd = true;
+    //        elapsedTime += Time.deltaTime;
+    //        transform.position = Vector3.Lerp(startPosition, overflowPointB, (elapsedTime / time) * speed);  
+    //        yield return new WaitForEndOfFrame();
     //    }
-    //    else if (checkReachedEnd == true && (Mathf.Abs(transform.position.x) >= Mathf.Abs(overflowPointB.x) - 0.1f))
-    //    {
-    //        notReachedEnd = false;
-    //    }
-
-
-
-    //    //if (Input.GetKeyDown(KeyCode.A))
-    //    //{
-    //    //    Flipper();
-    //    //    //ScaleAndLiftWave();
-    //    //    //SpeedIncreaser();
-    //    //    //PlayWaveRising();
-    //    //    GlobalVariables.sendWaveAway = false;
-    //    //    Vector3 temp = overflowPointA;
-    //    //    overflowPointA = overflowPointB;
-    //    //    overflowPointB = temp;
-    //    //    yield return null;
-    //    //}
-
-
+    //    //transform.position = end;
     //}
-   
+
+    private void Update()
+    {
+        float dTime = (Time.time - time) * speed;
+        float fracJourney = dTime / journeyLength;
+        transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
+        checkOverflowPoints();
+    }
+
+    void checkOverflowPoints()
+    {
+        if (checkReachedEnd == false && (transform.position.x <= maxStartXPoint || transform.position.x >= maxEndXPoint))
+        {
+            checkReachedEnd = true;
+        }
+        else if (checkReachedEnd == true && (Mathf.Abs(transform.position.x) >= Mathf.Abs(overflowPointB.x) - 0.1f))
+        {
+            notReachedEnd = false;
+        }
+
+    }
+
     void Flipper()
     {
         isFacingRight = !isFacingRight;
@@ -117,13 +102,18 @@ public class WaveMover : MonoBehaviour {
 
     public void deflectWave()
     {
-        Flipper();
-        ScaleAndLiftWave();
-        PlayWaveRising();
-        GlobalVariables.sendWaveAway = false;
+        // Recalulacting journey length with current position
+        startPosition = transform.position;
         Vector3 temp = overflowPointA;
         overflowPointA = overflowPointB;
         overflowPointB = temp;
+        journeyLength = Vector3.Distance(startPosition, overflowPointB);
+        time = Time.time;
+
+        // Fliping scaling object
+        Flipper();
+        ScaleAndLiftWave();
+        PlayWaveRising();
     }
 
 }
