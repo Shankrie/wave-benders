@@ -58,11 +58,6 @@ public class WaveMover : MonoBehaviour {
 
     private void Update()
     {
-        if(notReachedEnd == false)
-        {
-            Destroy(this);
-            return;  
-        }
         float dTime = (Time.time - time) * speed;
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
@@ -86,9 +81,22 @@ public class WaveMover : MonoBehaviour {
                 playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
             }
 
-            
 
-            deflectWave();
+
+            if (!deflectWave())
+            {
+                if (keyGen.hostMove)
+                {
+                    playerAvatar = GameObject.Find("Seal");
+                    playerAvatar.GetComponent<LoseController>().playerHaveLost();
+                }
+                else
+                {
+                    playerAvatar = GameObject.Find("Penguin");
+                    playerAvatar.GetComponent<LoseController>().playerHaveLost();
+                }
+            }
+
             keyGen.deflectWave = false;
             if (keyGen.difficulty < 9)
             {
@@ -138,7 +146,7 @@ public class WaveMover : MonoBehaviour {
 
     public bool deflectWave()
     {
-        if(checkReachedEnd == true)
+        if (checkReachedEnd == true)
         {
             return false;
         }
@@ -160,5 +168,6 @@ public class WaveMover : MonoBehaviour {
 
         return true;
     }
+
 
 }
