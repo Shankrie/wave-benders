@@ -16,6 +16,9 @@ public class KeyGenerator : NetworkBehaviour {
     private int difficulty = 0;
     private Dictionary<int, int> difficultyDic = new Dictionary<int, int>();
 
+    [SyncVar]
+    public bool hostMove = true;
+
     void Start () {
 
         difficultyDic.Add(0, 3);
@@ -102,9 +105,40 @@ public class KeyGenerator : NetworkBehaviour {
             selKeys[i] = randomKeyIndex;
         }
 
-        NetworkIdentity objNetId = GetComponent<NetworkIdentity>();        // get the object's network ID
+        NetworkIdentity objNetId = GetComponent<NetworkIdentity>();
+        if (objNetId.hasAuthority)
+            objNetId.RemoveClientAuthority(connectionToClient);// get the object's network ID
         objNetId.AssignClientAuthority(connectionToClient);    // assign authority to the player who is changing the color
         RpcPaint(selKeys);                                    // usse a Client RPC function to "paint" the object on all clients
         objNetId.RemoveClientAuthority(connectionToClient);    // remove the authority from the player who changed the color
+    }
+
+    [Command]
+    public void CmdDestroySpawnedKeys()
+    {
+        RpcDestroySpawnedKeys();
+    }
+
+    [ClientRpc]
+    private void RpcDestroySpawnedKeys()
+    {
+        foreach (Key key in spawnedKeys)
+        {
+            Destroy(key.KeyObject.gameObject);
+        }
+
+        spawnedKeys = new List<Key>();
+    }
+
+    [Command]
+    public void CmdGreyOutKey(int index)
+    {
+        RpcGreyOutKey(index);
+    }
+
+    [ClientRpc]
+    private void RpcGreyOutKey(int index)
+    {
+        spawnedKeys[index].KeyObject.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
     }
 }
