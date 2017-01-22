@@ -72,6 +72,10 @@ public class WaveMover : MonoBehaviour {
         {
             deflectWave();
             keyGen.deflectWave = false;
+            if (keyGen.difficulty < 9)
+            {
+                keyGen.difficulty++;
+            }
         }
     }
 

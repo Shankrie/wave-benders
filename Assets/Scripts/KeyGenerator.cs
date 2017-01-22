@@ -13,7 +13,8 @@ public class KeyGenerator : NetworkBehaviour {
     public List<Key> spawnedKeys = new List<Key>();
     private List<Transform> allKeys = new List<Transform>();
 
-    private int difficulty = 0;
+    [SyncVar]
+    public int difficulty = 0;
     private Dictionary<int, int> difficultyDic = new Dictionary<int, int>();
 
     [SyncVar]
@@ -25,10 +26,15 @@ public class KeyGenerator : NetworkBehaviour {
     void Start () {
 
         difficultyDic.Add(0, 3);
-        difficultyDic.Add(1, 4);
-        difficultyDic.Add(2, 5);
-        difficultyDic.Add(3, 6);
-        difficultyDic.Add(4, 7);
+        difficultyDic.Add(1, 3);
+        difficultyDic.Add(2, 4);
+        difficultyDic.Add(3, 4);
+        difficultyDic.Add(4, 5);
+        difficultyDic.Add(5, 5);
+        difficultyDic.Add(6, 6);
+        difficultyDic.Add(7, 6);
+        difficultyDic.Add(8, 7);
+        difficultyDic.Add(9, 7);
 
         keyCodesDic.Add(0, KeyCode.Q);
         keyCodesDic.Add(1, KeyCode.W);
