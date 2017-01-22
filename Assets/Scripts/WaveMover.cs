@@ -26,6 +26,9 @@ public class WaveMover : MonoBehaviour {
     const float DECREASE_TIMER_VALUE = 0.1f;
     const float MAX_SCALE_Y = 1.0f;
     const float MIN_TIMER_VALUE = 1.0f;
+
+    private KeyGenerator keyGen;
+
     
 
     void Start()
@@ -59,6 +62,17 @@ public class WaveMover : MonoBehaviour {
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
         checkOverflowPoints();
+
+        if (GameObject.Find("KeyGen(Clone)") == null)
+            return;
+
+        keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
+
+        if (keyGen.deflectWave)
+        {
+            deflectWave();
+            keyGen.deflectWave = false;
+        }
     }
 
     void checkOverflowPoints()
