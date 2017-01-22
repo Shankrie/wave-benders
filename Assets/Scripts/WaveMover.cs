@@ -34,6 +34,7 @@ public class WaveMover : NetworkBehaviour {
 
     void Start()
     {
+        PlayWaveRising(true);
         time = Time.time;
         startPosition = transform.position;
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
@@ -63,7 +64,7 @@ public class WaveMover : NetworkBehaviour {
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
         checkOverflowPoints();
-
+        if (checkReachedEnd == true) PlayWaveRising(false);
         if (GameObject.Find("KeyGen(Clone)") == null)
             return;
 
@@ -154,10 +155,23 @@ public class WaveMover : NetworkBehaviour {
     }
 
 
-    void PlayWaveRising()
+    void PlayWaveRising(bool looper)
     {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
+        audioSource.Play();
+        audioSource.loop = looper;
+    }
+    void PlaySealBark()
+    {
+        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = Resources.Load("sealBarking") as AudioClip;
+        audioSource.Play();
+    }
+    void PlayPenguinBattleCry()
+    {
+        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = Resources.Load("penguinBattleCry") as AudioClip;
         audioSource.Play();
     }
 
@@ -179,8 +193,6 @@ public class WaveMover : NetworkBehaviour {
         // Fliping scaling object
         Flipper();
         ScaleAndLiftWave();
-        PlayWaveRising();
-
         speed += 0.25f;
 
         return true;
