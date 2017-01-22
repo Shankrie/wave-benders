@@ -33,7 +33,7 @@ public class WaveMover : MonoBehaviour {
 
     void Start()
     {
-        PlayWaveRising();
+        PlayWaveRising(true);
         time = Time.time;
         startPosition = transform.position;
         transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
@@ -65,7 +65,7 @@ public class WaveMover : MonoBehaviour {
         float fracJourney = dTime / journeyLength;
         transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
         checkOverflowPoints();
-
+        if (checkReachedEnd == true) PlayWaveRising(false);
         if (GameObject.Find("KeyGen(Clone)") == null)
             return;
 
@@ -140,12 +140,12 @@ public class WaveMover : MonoBehaviour {
     }
 
 
-    void PlayWaveRising()
+    void PlayWaveRising(bool looper)
     {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = Resources.Load("waveRising") as AudioClip;
         audioSource.Play();
-        audioSource.loop = true;
+        audioSource.loop = looper;
     }
     void PlaySealBark()
     {
