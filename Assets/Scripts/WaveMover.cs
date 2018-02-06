@@ -1,157 +1,83 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Networking;
+﻿using UnityEngine;
 
-public class WaveMover : NetworkBehaviour {
+public class WaveMover : MonoBehaviour {
 
     public Transform Aposition;
     public Transform Bposition;
 
-    private Vector3 overflowPointA;
-    private Vector3 overflowPointB;
-    private Vector3 startPosition;
+    private Vector3 _overflowPointA;
+    private Vector3 _overflowPointB;
+    private Vector3 _startPosition;
+    private Vector3 _initialScale;
+    private Vector3 _initialPosition;
 
-    private float maxEndXPoint;
-    private float maxStartXPoint;
-    private float speed = 1.0f;
-    private float time;
-    private float journeyLength;
+    private float _maxEndXPoint;
+    private float _maxStartXPoint;
+    private float _speed = Globals.Defaults.WaveSpeed;
+    private float _lastSpeed = Globals.Defaults.WaveSpeed;
+    private float _time;
+    private float _journeyLength;
 
-    private bool isFacingRight = true;
-    private bool notReachedEnd = true;
-    private bool checkReachedEnd = false;
+    private bool _isFacingRight = true;
+    private bool _reachedEnd = false;
 
     const float INCREASE_SCALE_Y = 0.05f;
     const float INCREASE_SCALE_X = 0.025f;
-    const float DECREASE_TIMER_VALUE = 0.1f;
+    const float DECREASE__timeR_VALUE = 0.1f;
     const float MAX_SCALE_Y = 1.0f;
-    const float MIN_TIMER_VALUE = 1.0f;
-
-    private KeyGenerator keyGen;
-
-    
+    const float MIN__timeR_VALUE = 1.0f;
 
     void Start()
     {
         PlayWaveRising(true);
-        time = Time.time;
-        startPosition = transform.position;
-        transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
-        overflowPointA = Aposition.position + new Vector3(-5, 0, 0);
-        overflowPointB = Bposition.position + new Vector3(5, 0, 0);
-        maxStartXPoint = Aposition.position.x;
-        maxEndXPoint = Bposition.position.x;
-        //StartCoroutine(MoveOverSeconds());
-        journeyLength = Vector3.Distance(startPosition, overflowPointB);   
-    }
 
-    //public IEnumerator MoveOverSeconds()
-    //{
-    //    float elapsedTime = 0;
-    //    while (true)
-    //    {
-    //        elapsedTime += Time.deltaTime;
-    //        transform.position = Vector3.Lerp(startPosition, overflowPointB, (elapsedTime / time) * speed);  
-    //        yield return new WaitForEndOfFrame();
-    //    }
-    //    //transform.position = end;
-    //}
+        transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
+
+        _time = Time.time;
+        _startPosition = transform.position;
+        _overflowPointA = Aposition.position + new Vector3(-5, 0, 0);
+        _overflowPointB = Bposition.position + new Vector3(5, 0, 0);
+        _initialScale = transform.localScale;
+        _initialPosition = transform.position;
+        _maxStartXPoint = Aposition.position.x;
+        _maxEndXPoint = Bposition.position.x;
+        _journeyLength = Vector3.Distance(_startPosition, _overflowPointB);   
+    }
 
     private void Update()
     {
-        float dTime = (Time.time - time) * speed;
-        float fracJourney = dTime / journeyLength;
-        transform.position = Vector3.Lerp(startPosition, overflowPointB, fracJourney);
-        checkOverflowPoints();
-
-        if (notReachedEnd == false)
-        {
-            Destroy(gameObject);
-        }
-
-        if (checkReachedEnd == true) PlayWaveRising(false);
-        if (GameObject.Find("KeyGen(Clone)") == null)
+        if (_reachedEnd)
             return;
 
-        keyGen = GameObject.Find("KeyGen(Clone)").GetComponent<KeyGenerator>();
+        float d_time = (Time.time - _time) * _speed;
+        float fracJourney = d_time / _journeyLength;
+        transform.position = Vector3.Lerp(_startPosition, _overflowPointB, fracJourney);
 
-        if (checkReachedEnd)
+        // Wave reached it's overflow point which means game end
+        if (transform.position.x > _overflowPointB.x - 0.1f ||
+            transform.position.x < _overflowPointA.x + 0.1f)
         {
-            GameObject playerAvatar;
-            if (keyGen.hostMove)
-            {
-                playerAvatar = GameObject.Find("Penguin");
-                playerAvatar.GetComponent<LoseController>().playerHaveLost();
-            }
-            else
-            {
-                playerAvatar = GameObject.Find("Seal");
-                playerAvatar.GetComponent<LoseController>().playerHaveLost();
-            }
-
-            return;
+            StopPlayWaveRising();
+            _reachedEnd = true;
         }
-        else if (keyGen.deflectWave)
-        {
-            GameObject playerAvatar;
-            if (keyGen.hostMove)
-            {
-                playerAvatar = GameObject.Find("Seal");
-                PlaySealBark();
-                playerAvatar.GetComponent<Animator>().SetTrigger("Clap");
-            }
-            else {
-                playerAvatar = GameObject.Find("Penguin");
-                PlayPenguinBattleCry();
-                playerAvatar.GetComponent<Animator>().SetTrigger("Flail");
-            }
-
-
-
-            if (!deflectWave())
-            {
-                if (keyGen.hostMove)
-                {
-                    playerAvatar = GameObject.Find("Seal");
-                    playerAvatar.GetComponent<LoseController>().playerHaveLost();
-                }
-                else
-                {
-                    playerAvatar = GameObject.Find("Penguin");
-                    playerAvatar.GetComponent<LoseController>().playerHaveLost();
-                }
-            }
-
-            keyGen.deflectWave = false;
-            if (keyGen.difficulty < 9)
-            {
-                keyGen.difficulty++;
-            }
-        }
-
-        
     }
 
-    void checkOverflowPoints()
+    private void OnEnable()
     {
-        if (checkReachedEnd == false && (transform.position.x <= maxStartXPoint || transform.position.x >= maxEndXPoint))
-        {
-            checkReachedEnd = true;
-        }
-        else if (checkReachedEnd == true && (Mathf.Abs(transform.position.x) >= Mathf.Abs(overflowPointB.x) - 0.1f))
-        {
-            notReachedEnd = false;
-        }
-
+        _time = Time.time;
     }
 
-    void Flipper()
+    public void Flipper()
     {
-        isFacingRight = !isFacingRight;
+        _isFacingRight = !_isFacingRight;
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
+    }
+
+    public void IncreaseSpeed()
+    {
+        _speed += Globals.Defaults.WaveSpeed;
     }
 
     void ScaleAndLiftWave()
@@ -160,8 +86,8 @@ public class WaveMover : NetworkBehaviour {
             return;
 
         transform.localScale += new Vector3(INCREASE_SCALE_X * Mathf.Sign(transform.localScale.x), INCREASE_SCALE_Y, 0);
-        overflowPointA += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
-        overflowPointB += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
+        _overflowPointA += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
+        _overflowPointB += new Vector3(0, INCREASE_SCALE_Y * 5, 0);
     }
 
 
@@ -173,6 +99,13 @@ public class WaveMover : NetworkBehaviour {
         audioSource.Play();
         audioSource.loop = looper;
     }
+
+    void StopPlayWaveRising()
+    {
+        AudioSource audioSrc = GetComponent<AudioSource>();
+        audioSrc.enabled = false;
+    }
+
     void PlaySealBark()
     {
         AudioSource audioSource = gameObject.AddComponent<AudioSource>();
@@ -188,26 +121,41 @@ public class WaveMover : NetworkBehaviour {
 
     public bool deflectWave()
     {
-        if (checkReachedEnd == true)
-        {
-            return false;
-        }
-
         // Recalulacting journey length with current position
-        startPosition = transform.position;
-        Vector3 temp = overflowPointA;
-        overflowPointA = overflowPointB;
-        overflowPointB = temp;
-        journeyLength = Vector3.Distance(startPosition, overflowPointB);
-        time = Time.time;
+        _startPosition = transform.position;
+        Vector3 temp = _overflowPointA;
+        _overflowPointA = _overflowPointB;
+        _overflowPointB = temp;
+        _journeyLength = Vector3.Distance(_startPosition, _overflowPointB);
+        _time = Time.time;
 
         // Fliping scaling object
         Flipper();
         ScaleAndLiftWave();
-        speed += 0.25f;
+        _speed = _lastSpeed + 0.25f;
+        _lastSpeed = _speed;
 
         return true;
     }
 
+    public void ResetWave()
+    {
+        if(!_isFacingRight)
+        {
+            Flipper();
+        }
+        // Setup positions and scale
+        transform.localScale = _initialScale;
+        transform.position = _initialPosition;
+        _startPosition = _initialPosition;
 
+        _overflowPointA = Aposition.position + new Vector3(-5, 0, 0);
+        _overflowPointB = Bposition.position + new Vector3(5, 0, 0);
+
+        _maxStartXPoint = Aposition.position.x;
+        _maxEndXPoint = Bposition.position.x;
+
+        _reachedEnd = false;
+        enabled = false;
+    }
 }

@@ -31,7 +31,7 @@ public class CreditsController : MonoBehaviour
 
         if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * 0.9f, Screen.width * .25f, Screen.height * .05f), "Back"))
         {
-            SceneManager.LoadScene(Constants.MainMenuIndex);
+            SceneManager.LoadScene((int)Globals.SceneIndex.MainMenu);
         }
 
 
