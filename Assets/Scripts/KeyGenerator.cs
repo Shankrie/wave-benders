@@ -53,7 +53,7 @@ public class KeyGenerator: MonoBehaviour {
             Transform randomKey = allKeys[keys[i]];
             Transform keyObject = Instantiate(randomKey, position, randomKey.rotation);
             SpriteRenderer renderer = keyObject.GetComponent<SpriteRenderer>();
-            renderer.color = !myTurn ?
+            renderer.color = myTurn ?
                 Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] :
                 Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
             spawnedKeys.Add(new Key(keyObject, keys[i]));
@@ -87,7 +87,7 @@ public class KeyGenerator: MonoBehaviour {
 
         // gray out that key
         SpriteRenderer renderer = keyRef.GetComponent<SpriteRenderer>();
-        renderer.color = !myTurn ? 
+        renderer.color = myTurn ? 
             Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] : 
             Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
     }

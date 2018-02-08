@@ -16,6 +16,11 @@ public class Movement : MonoBehaviour, IPunObservable {
     /// </summary>
     public bool IsMyTurn { get { return _myTurn; } }
 
+    /// <summary>
+    /// Return true if player controls pohoton view
+    /// </summary>
+    public bool ControlsView { get { return _pw.isMine; } }
+
 
     private KeyGenerator _keyGen;
     private CountDown _countDown;
@@ -52,7 +57,7 @@ public class Movement : MonoBehaviour, IPunObservable {
         {
             _keyGen.SetViewMovement = this;
             _countDown.SetViewMovement = this;
-            if(!PhotonNetwork.isMasterClient)
+            if(PhotonNetwork.isMasterClient)
             {
                 StartCountDownCall();
             }
@@ -102,13 +107,13 @@ public class Movement : MonoBehaviour, IPunObservable {
                     // Flip the wave if progessed current level
                     if (_progress == _selectedKeys.Length)
                     {
-                        _pw.RPC("DeflectWaveRPC", PhotonTargets.All);
+                        _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _waveMover.transform.position);
                     }
                 }
                 // Move the wave faster to player and don't let player to do anything
                 else if (Regex.Match(Input.inputString, "[a-z0-9]").Success)
                 {
-                    _pw.RPC("WaveFloodRPC", PhotonTargets.All, false);
+                    _pw.RPC("ForceFloodWaveRPC", PhotonTargets.All);
                 }
             }
         }
@@ -119,7 +124,7 @@ public class Movement : MonoBehaviour, IPunObservable {
     {
         if(collider.gameObject.CompareTag(Globals.Tags.Wave))
         {
-            _pw.RPC("WaveFloodRPC", PhotonTargets.All, false);
+            _pw.RPC("WaveFloodRPC", PhotonTargets.All);
         }
     }
 
@@ -130,6 +135,7 @@ public class Movement : MonoBehaviour, IPunObservable {
     {
         _countDown.StartCountDown();
     }
+
 
     /// <summary>
     /// Calls RPC foreach Client to start countdownn
@@ -154,7 +160,6 @@ public class Movement : MonoBehaviour, IPunObservable {
 
     public void DeflectWaveCall()
     {
-        _selectedKeys = _keyGen.GetRandomKeys();
         _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _waveMover.transform.position);
     }
 
@@ -179,6 +184,8 @@ public class Movement : MonoBehaviour, IPunObservable {
         _myTurn = !_myTurn;
 
         // paint new keys
+        _keyGen.SetLevel = 0;
+        _keyGen.spawnedKeys.Clear();
         _selectedKeys = _keyGen.GetRandomKeys();
         _keyGen.PaintKeys(_selectedKeys, _myTurn);
     }
@@ -197,6 +204,7 @@ public class Movement : MonoBehaviour, IPunObservable {
         _waveMover.deflectWave();
 
         // paint new keys
+        _keyGen.spawnedKeys.Clear();
         _selectedKeys = _keyGen.GetRandomKeys();
         _keyGen.PaintKeys(_selectedKeys, _myTurn);
     }
@@ -207,11 +215,18 @@ public class Movement : MonoBehaviour, IPunObservable {
         _waveMover.IncreaseSpeed();
     }
 
+    [PunRPC]
+    public void ForceFloodWaveRPC()
+    {
+        _waveFlooded = true;
+        _waveMover.IncreaseSpeed();
+    }
+
     /// <summary>
     /// RPC called when the Wave hits the player
     /// </summary>
     [PunRPC]
-    public void WaveFloodRPC(bool forceFlood)
+    public void WaveFloodRPC()
     {
         _waveFlooded = true;
         if (_myTurn)
@@ -223,16 +238,13 @@ public class Movement : MonoBehaviour, IPunObservable {
     [PunRPC]
     public void ResetLevelRPC()
     {
-        _progress = 0;
-
-        _gameController.ResetLevel();
-
-        _waveFlooded = false;
         _myTurn = !PhotonNetwork.isMasterClient;
+        _progress = 0;
+        _waveFlooded = false;
         _selectedKeys = null;
 
+        _gameController.ResetLevel();
         StartCountDown();
-
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

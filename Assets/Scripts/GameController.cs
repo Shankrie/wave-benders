@@ -11,17 +11,21 @@ public class GameController : MonoBehaviour {
     // Initial Client Position
     public Transform ClientPosition;
 
-
+    private GameObject[] _players;
     private GameObject _masterClientObject;
     private GameObject _clientObject;
     private GameObject _waveObject;
     private GameObject _gameEndGUI;
     private GameObject _networkGUI;
 
+    private Movement _masterClientMovement;
+    private Movement _clientMovement;
+
     private WaveMover _waveMover;
 
     private void Awake()
     {
+        _players = null;
         _masterClientObject = null;
         _clientObject = null;
         _waveObject = null;
@@ -59,11 +63,32 @@ public class GameController : MonoBehaviour {
         try
         {
             // Calls to reset level on all clients
-            if (_masterClientObject == null)
+            if (_players == null)
             {
-                _masterClientObject = GameObject.FindGameObjectWithTag(Globals.Tags.MasterClient);
+                _players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
+                foreach(GameObject player in _players)
+                {
+                    if (player.GetComponent<Movement>().ControlsView)
+                    {
+                        _masterClientObject = player;
+                        _masterClientMovement = player.GetComponent<Movement>();
+                    }
+                    else
+                    {
+                        _clientObject = player;
+                        _clientMovement = player.GetComponent<Movement>();
+                    }
+                }
+                if(_masterClientObject == null)
+                {
+                    throw new System.Exception("Cannot find player who controls photon view");
+                }
+                else if(_clientObject == null)
+                {
+                    throw new System.Exception("Cannot find player who doesn't control photon view");
+                }
             }
-            _masterClientObject.GetComponent<Movement>().ResetLevelCall();
+            _masterClientMovement.ResetLevelCall();
         }
         catch(Exception ex)
         {
@@ -78,10 +103,7 @@ public class GameController : MonoBehaviour {
     {
         try
         {
-            if (_clientObject == null)
-            {
-                _clientObject = GameObject.FindGameObjectWithTag(Globals.Tags.Player);
-            }
+            _clientObject = GameObject.FindGameObjectWithTag(Globals.Tags.Player);
             if (_waveObject == null)
             {
                 _waveObject = GameObject.FindGameObjectWithTag(Globals.Tags.Wave);
@@ -111,6 +133,4 @@ public class GameController : MonoBehaviour {
         PhotonNetwork.LeaveRoom();
         SceneManager.LoadScene((int)Globals.SceneIndex.Game);
     }
-
-
 }

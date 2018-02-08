@@ -23,7 +23,6 @@ public static class Globals
         public const string Player = "Player";
         public const string Wave = "Wave";
         public const string CountDown = "CountDown";
-        public const string MasterClient = "MasterClient";
         public const string GameEndGUI = "GameEndGUI";
         public const string GameController = "GameController";
     }
@@ -63,7 +62,7 @@ public static class Globals
     public static Color[] InactiveColorsByTurn = new Color[]
     {
         new Color(0.5f, 0.5f, 0.5f, 1),
-        new Color(1, 1, 0.6f, 1)
+        new Color(1, 1, 0.3f, 1)
     };
 
     public enum ColorTurnIndex

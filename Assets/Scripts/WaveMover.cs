@@ -23,9 +23,9 @@ public class WaveMover : MonoBehaviour {
 
     const float INCREASE_SCALE_Y = 0.05f;
     const float INCREASE_SCALE_X = 0.025f;
-    const float DECREASE__timeR_VALUE = 0.1f;
+    const float INCREASE_SPEED = 0.25f;
     const float MAX_SCALE_Y = 1.0f;
-    const float MIN__timeR_VALUE = 1.0f;
+    const float MAX_SPEED = 5.0f;
 
     void Start()
     {
@@ -54,8 +54,7 @@ public class WaveMover : MonoBehaviour {
         transform.position = Vector3.Lerp(_startPosition, _overflowPointB, fracJourney);
 
         // Wave reached it's overflow point which means game end
-        if (transform.position.x > _overflowPointB.x - 0.1f ||
-            transform.position.x < _overflowPointA.x + 0.1f)
+        if (transform.position.x > Mathf.Abs(_overflowPointB.x) - 0.1f) 
         {
             StopPlayWaveRising();
             _reachedEnd = true;
@@ -77,7 +76,10 @@ public class WaveMover : MonoBehaviour {
 
     public void IncreaseSpeed()
     {
-        _speed += Globals.Defaults.WaveSpeed;
+        _speed = Mathf.Clamp(_speed + INCREASE_SPEED * 2, _lastSpeed, MAX_SPEED);
+        _time = Time.time;
+        _startPosition = transform.position;
+        _journeyLength = Vector3.Distance(_startPosition, _overflowPointB);
     }
 
     void ScaleAndLiftWave()
@@ -123,16 +125,22 @@ public class WaveMover : MonoBehaviour {
     {
         // Recalulacting journey length with current position
         _startPosition = transform.position;
+
+        // flip wave destination
         Vector3 temp = _overflowPointA;
         _overflowPointA = _overflowPointB;
         _overflowPointB = temp;
+
+        // recalculate wave journey distance
         _journeyLength = Vector3.Distance(_startPosition, _overflowPointB);
         _time = Time.time;
 
         // Fliping scaling object
         Flipper();
         ScaleAndLiftWave();
-        _speed = _lastSpeed + 0.25f;
+
+        // Increase speed
+        _speed = Mathf.Clamp(_speed + INCREASE_SPEED, _lastSpeed, MAX_SPEED);
         _lastSpeed = _speed;
 
         return true;
@@ -157,5 +165,7 @@ public class WaveMover : MonoBehaviour {
 
         _reachedEnd = false;
         enabled = false;
+
+        _speed = Globals.Defaults.WaveSpeed;
     }
 }
