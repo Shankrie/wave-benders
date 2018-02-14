@@ -1,31 +1,33 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class MainMenuController : MonoBehaviour
+namespace TAHL.WAVE_BENDER
 {
-
-    public Texture BackgText;
-
-    // Make cursor visible on the screen
-    void Update()
+    public class MainMenuController : MonoBehaviour
     {
-        Cursor.visible = true;
-    }
 
-    void OnGUI()
-    {
-        if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .5f, Screen.width * .25f, Screen.height * .05f), "Start Game"))
+        public Texture BackgText;
+
+        // Make cursor visible on the screen
+        void Update()
         {
-            SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+            Cursor.visible = true;
         }
-        else if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .575f, Screen.width * .25f, Screen.height * .05f), "Credits"))
+
+        void OnGUI()
         {
-            SceneManager.LoadScene((int)Globals.SceneIndex.Credits);
-        }
-        else if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .65f, Screen.width * .25f, Screen.height * .05f), "Exit"))
-        {
-            Application.Quit();
+            if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .5f, Screen.width * .25f, Screen.height * .05f), "Start Game"))
+            {
+                SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+            }
+            else if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .575f, Screen.width * .25f, Screen.height * .05f), "Credits"))
+            {
+                SceneManager.LoadScene((int)Globals.SceneIndex.Credits);
+            }
+            else if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .65f, Screen.width * .25f, Screen.height * .05f), "Exit"))
+            {
+                Application.Quit();
+            }
         }
     }
 }

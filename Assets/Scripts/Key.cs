@@ -1,17 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class Key {
-
-    public Transform KeyObject;
-    public int KeyIndex;
-
-    public Key(Transform keyObject, int keyIndex)
+namespace TAHL.WAVE_BENDER
+{
+    public class Key
     {
-        KeyObject = keyObject;
-        KeyIndex = keyIndex;
+        public Transform KeyObject;
+        public int KeyIndex;
+
+        public Key(Transform keyObject, int keyIndex)
+        {
+            KeyObject = keyObject;
+            KeyIndex = keyIndex;
+        }
     }
-
-
 }

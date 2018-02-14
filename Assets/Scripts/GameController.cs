@@ -1,136 +1,114 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameController : MonoBehaviour {
-
-    // Initial Master Client Position
-    public Transform MasterClientPosition;
-    // Initial Client Position
-    public Transform ClientPosition;
-
-    private GameObject[] _players;
-    private GameObject _masterClientObject;
-    private GameObject _clientObject;
-    private GameObject _waveObject;
-    private GameObject _gameEndGUI;
-    private GameObject _networkGUI;
-
-    private Movement _masterClientMovement;
-    private Movement _clientMovement;
-
-    private WaveMover _waveMover;
-
-    private void Awake()
+namespace TAHL.WAVE_BENDER
+{
+    public class GameController : MonoBehaviour
     {
-        _players = null;
-        _masterClientObject = null;
-        _clientObject = null;
-        _waveObject = null;
-        _waveMover = null;
-        _gameEndGUI = GameObject.FindGameObjectWithTag(Globals.Tags.GameEndGUI);
-        _gameEndGUI.SetActive(false);
+        // Initial Master Client Position
+        public Transform MasterClientPosition;
+        // Initial Client Position
+        public Transform ClientPosition;
 
-        _networkGUI = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkGUI);
-    }
+        private GameObject _masterClientObject;
+        private GameObject _clientObject;
+        private GameObject _gameEndGUI;
+        private GameObject _networkGUI;
 
-    // Update is called once per frame
-    void Update () {
-		if(Input.GetKeyDown(KeyCode.Escape))
+        private KeyController _masterClientKeyController;
+        private KeyController _clientKeyController;
+
+
+        private void Awake()
         {
-            _gameEndGUI.SetActive(!_gameEndGUI.activeSelf);
+            _masterClientObject = null;
+            _clientObject = null;
+
+            _gameEndGUI = GameObject.FindGameObjectWithTag(Globals.Tags.GameEndGUI);
+            _gameEndGUI.SetActive(false);
+
+            _networkGUI = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkGUI);
         }
-	}
 
-    public void EndGame()
-    {
-        _gameEndGUI.SetActive(true);
-    }
-
-    public void GotoMainMenu()
-    {
-        PhotonNetwork.Disconnect();
-        SceneManager.LoadScene((int)Globals.SceneIndex.MainMenu);
-    }
-
-    /// <summary>
-    /// Called on click, it's purpose is to call rpc which objective is to restart level
-    /// </summary>
-    public void RestartLevel()
-    {
-        try
+        // Update is called once per frame
+        void Update()
         {
-            // Calls to reset level on all clients
-            if (_players == null)
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                _players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
-                foreach(GameObject player in _players)
+                _gameEndGUI.SetActive(!_gameEndGUI.activeSelf);
+            }
+        }
+
+        public void EndGame()
+        {
+            _gameEndGUI.SetActive(true);
+        }
+
+        public void GotoMainMenu()
+        {
+            PhotonNetwork.Disconnect();
+            SceneManager.LoadScene((int)Globals.SceneIndex.MainMenu);
+        }
+
+        /// <summary>
+        /// Called on click, it's purpose is to call rpc which objective is to restart level
+        /// </summary>
+        public void GetPlayerData()
+        {
+            try
+            {
+                // Calls to reset level on all clients
+                if (_masterClientKeyController == null)
                 {
-                    if (player.GetComponent<Movement>().ControlsView)
+                    GameObject[] players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
+                    foreach (GameObject player in players)
                     {
-                        _masterClientObject = player;
-                        _masterClientMovement = player.GetComponent<Movement>();
+                        if (player.GetComponent<KeyController>().PlayerDirection == 1)
+                        {
+                            _masterClientObject = player;
+                            _masterClientKeyController = player.GetComponent<KeyController>();
+                        }
+                        else
+                        {
+                            _clientObject = player;
+                            _clientKeyController = player.GetComponent<KeyController>();
+                        }
                     }
-                    else
+                    if (_masterClientObject == null)
                     {
-                        _clientObject = player;
-                        _clientMovement = player.GetComponent<Movement>();
+                        throw new System.Exception("Cannot find player who controls photon view");
                     }
-                }
-                if(_masterClientObject == null)
-                {
-                    throw new System.Exception("Cannot find player who controls photon view");
-                }
-                else if(_clientObject == null)
-                {
-                    throw new System.Exception("Cannot find player who doesn't control photon view");
+                    else if (_clientObject == null)
+                    {
+                        throw new System.Exception("Cannot find player who doesn't control photon view");
+                    }
                 }
             }
-            _masterClientMovement.ResetLevelCall();
-        }
-        catch(Exception ex)
-        {
-            Debug.Log(ex.ToString());
-        }
-    }
-
-    /// <summary>
-    /// Called only from movement component
-    /// </summary>
-    public void ResetLevel()
-    {
-        try
-        {
-            _clientObject = GameObject.FindGameObjectWithTag(Globals.Tags.Player);
-            if (_waveObject == null)
+            catch (Exception ex)
             {
-                _waveObject = GameObject.FindGameObjectWithTag(Globals.Tags.Wave);
-                _waveMover = _waveObject.GetComponent<WaveMover>();
+                Debug.Log(ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// Called only from movement component
+        /// </summary>
+        public void ResetLevel()
+        {
+            _masterClientObject.transform.position = MasterClientPosition.position;
+            _masterClientObject.transform.rotation = Quaternion.identity;
 
             _clientObject.transform.position = ClientPosition.position;
             _clientObject.transform.rotation = Quaternion.identity;
 
-            _masterClientObject.transform.position = MasterClientPosition.position;
-            _masterClientObject.transform.rotation = Quaternion.identity;
-
-            // Reset wave position scale and facing direction
-            _waveMover.ResetWave();
-            _waveObject.SetActive(false);
-
             _gameEndGUI.SetActive(false);
         }
-        catch(Exception ex)
-        {
-            Debug.Log(ex.ToString());
-        }
-    }
 
-    public void ReturnToLobby()
-    {
-        PhotonNetwork.LeaveRoom();
-        SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+        public void ReturnToLobby()
+        {
+            PhotonNetwork.LeaveRoom();
+            SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+        }
     }
 }

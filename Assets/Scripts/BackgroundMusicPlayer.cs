@@ -1,29 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class BackgroundMusicPlayer : MonoBehaviour
+namespace TAHL.WAVE_BENDER
 {
 
-   // public GameObject gameObject;
-	// Use this for initialization
-	void Start () {
-
-        PlayBackgroundTheme();
-      // if (gameObject.name == "Seal") PlaySealBark();
-      // if (gameObject.name == "Penguin") PlayPenguinBattleCry();
-    }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-    void PlayBackgroundTheme()
+    public class BackgroundMusicPlayer : MonoBehaviour
     {
-        AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = Resources.Load("Ocean") as AudioClip;
-        audioSource.Play();
-        audioSource.loop = true;
+
+        // public GameObject gameObject;
+        // Use this for initialization
+        void Start()
+        {
+
+            PlayBackgroundTheme();
+            // if (gameObject.name == "Seal") PlaySealBark();
+            // if (gameObject.name == "Penguin") PlayPenguinBattleCry();
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+
+        }
+        void PlayBackgroundTheme()
+        {
+            AudioSource audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.clip = Resources.Load("Ocean") as AudioClip;
+            audioSource.Play();
+            audioSource.loop = true;
+        }
     }
-  
 }

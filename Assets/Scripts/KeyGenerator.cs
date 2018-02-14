@@ -1,104 +1,121 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Networking;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using UnityEngine;
 
-[RequireComponent(typeof(CountDown))]
-public class KeyGenerator: MonoBehaviour {
-
-    public GameObject Keyboard;
-    public Transform KeysPosition;
-    public Movement SetViewMovement { set { _mineViewMovement = value; } }
-    public List<Key> spawnedKeys = new List<Key>();
-    public List<Transform> allKeys = new List<Transform>();
-    public int SetLevel { set { _level = value; } }
-
-    public bool hostMove = true;
-    public bool deflectWave = false;
-
-    private CountDown _countDown = null;
-    private Movement _mineViewMovement = null;
-
-    private int _level = 0;
-
-    private bool _initialized = false;
-
-    void Start() {
-        foreach (Transform key in Keyboard.transform)
-        {
-            allKeys.Add(key);
-        }
-    }
-
-    public void PaintKeys(int[] keys, bool myTurn)
+namespace TAHL.WAVE_BENDER
+{
+    [RequireComponent(typeof(CountDown))]
+    public class KeyGenerator : MonoBehaviour
     {
-        float keySpacing = 0.7f;
+        public List<Key> spawnedKeys = new List<Key>();
+        public Transform KeysPosition;
+        public Texture2D txt;
+        public int Level { get { return _level; } set { _level = value; } }
 
-        float positionOffset = 0;
+        private Sprite[] _sprites;
+        private CountDown _countDown = null;
 
-        int numberOfKeys = Globals.Difficulty.DifficultyLevels[_level];
-        if (numberOfKeys % 2 == 0)
+        private int _level = 0;
+        private bool _initialized = false;
+
+        void Start()
         {
-            positionOffset = keySpacing / 2;
+            _sprites = Resources.LoadAll<Sprite>("keys");
         }
 
-        for (int i = 0; i < keys.Length; i++)
+        public void PaintKeys(int[] keys, bool myTurn)
         {
-            Vector3 startPosition = new Vector3(KeysPosition.position.x - (numberOfKeys / 2 * keySpacing) + positionOffset, KeysPosition.position.y, KeysPosition.position.z);
+            float keySpacing = 0.7f;
+            float positionOffset = 0;
 
-            Vector3 position = new Vector3(startPosition.x + i * keySpacing, startPosition.y, startPosition.z);
+            int numberOfKeys = Globals.Difficulty.DifficultyLevels[_level];
+            if (numberOfKeys % 2 == 0)
+            {
+                positionOffset = keySpacing / 2;
+            }
 
-            Transform randomKey = allKeys[keys[i]];
-            Transform keyObject = Instantiate(randomKey, position, randomKey.rotation);
-            SpriteRenderer renderer = keyObject.GetComponent<SpriteRenderer>();
+            for (int i = 0; i < keys.Length; i++)
+            {
+                Vector3 startPosition = new Vector3(
+                    KeysPosition.position.x - (numberOfKeys / 2 * keySpacing) + positionOffset, 
+                    KeysPosition.position.y, 
+                    KeysPosition.position.z
+                );
+
+                Vector3 position = new Vector3(startPosition.x + i * keySpacing, startPosition.y, startPosition.z);
+
+                // Create key gameobject
+                Transform randomKeyObject = new GameObject().transform;
+                randomKeyObject.position = position;
+                randomKeyObject.rotation = Quaternion.identity;
+                randomKeyObject.gameObject.name = _sprites[keys[i]].name;
+
+                // add sprite renderer component to gameobject
+                SpriteRenderer renderer = randomKeyObject.gameObject.AddComponent<SpriteRenderer>();
+                renderer.sprite = _sprites[keys[i]];
+                renderer.color = myTurn ?
+                    Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] :
+                    Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
+                spawnedKeys.Add(new Key(randomKeyObject, keys[i]));
+            }
+        }
+
+        public int[] GetRandomKeys()
+        {
+            System.Random rnd = new System.Random();
+
+            int numberOfKeys = Globals.Difficulty.DifficultyLevels[_level];
+
+            int[] keys = new int[numberOfKeys];
+            for (int i = 0; i < numberOfKeys; i++)
+            {
+                int randomKeyIndex = rnd.Next(0, _sprites.Length - 1);
+                keys[i] = randomKeyIndex;
+            }
+
+            return keys;
+        }
+
+        public void GrayOutKey(bool myTurn, int key)
+        {
+            if (spawnedKeys.Count == 0)
+                return;
+
+            // get and remove key from spawnedKeys list
+            GameObject keyRef = spawnedKeys[key].KeyObject.gameObject;
+
+            // gray out that key
+            SpriteRenderer renderer = keyRef.GetComponent<SpriteRenderer>();
             renderer.color = myTurn ?
-                Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] :
-                Globals.ColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
-            spawnedKeys.Add(new Key(keyObject, keys[i]));
+                Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] :
+                Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
         }
-    }
 
-    public int[] GetRandomKeys()
-    {
-        System.Random rnd = new System.Random();
-
-        int numberOfKeys = Globals.Difficulty.DifficultyLevels[_level];
-
-        int[] keys = new int[numberOfKeys];
-        for (int i = 0; i < numberOfKeys; i++)
+        public void IncreaseLevel()
         {
-            int randomKeyIndex = rnd.Next(1, allKeys.Count);
-            keys[i] = randomKeyIndex;
+            if (_level < Globals.Difficulty.MAX_DIFF_LEVEL)
+                _level++;
         }
 
-        return keys;
-    }
+        public void DestroySpawnedKeys()
+        {
+            while (spawnedKeys.Count != 0)
+            {
+                Key firstKey = spawnedKeys[0];
+                spawnedKeys.RemoveAt(0);
+                Destroy(firstKey.KeyObject.gameObject);
+            }
+        }
+        
+        public bool IsKeySpawnedKey(string key, int progress)
+        {
+            if(spawnedKeys.Count <= progress)
+            {
+                throw new System.Exception("Error. Spawned key is out of bounds");
+            }
 
-    public void GrayOutFirstKey(bool myTurn)
-    {
-        if (spawnedKeys.Count == 0)
-            return;
-
-        // get and remove key from spawnedKeys list
-        GameObject keyRef = spawnedKeys[0].KeyObject.gameObject;
-        spawnedKeys.RemoveAt(0);
-
-        // gray out that key
-        SpriteRenderer renderer = keyRef.GetComponent<SpriteRenderer>();
-        renderer.color = myTurn ? 
-            Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] : 
-            Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
-    }
-
-    public void SetMineView(Movement movement)
-    {
-        _mineViewMovement = movement;
-    }
-
-    public void IncreaseLevel() {
-        if(_level < Globals.Difficulty.MAX_DIFF_LEVEL)
-            _level++;
+            // is first gameobject name char is equal to key char
+            return spawnedKeys[progress].KeyObject.name[0] == key[0];
+        }
     }
 }

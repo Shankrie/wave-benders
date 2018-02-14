@@ -1,66 +1,69 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(InputField))]
-public class PlayerPrefLoader : MonoBehaviour
+namespace TAHL.WAVE_BENDER
 {
-
-    #region Public Variables
-
-    public PlayerPrefFlags playerPrefFlag;
-    public enum PlayerPrefFlags
+    [RequireComponent(typeof(InputField))]
+    public class PlayerPrefLoader : MonoBehaviour
     {
-        PlayerName,
-        GameRoomName
-    }
 
-    private bool _controllPlayerName;
+        #region Public Variables
 
-    #endregion public
-
-    #region Private Variables
-
-    private string[] playerPrefs = new string[] { Globals.PUNKeys.playerName, Globals.PUNKeys.gameRoomName };
-    InputField inputField;
-
-    #endregion private
-
-    #region MonoBehaviour CallBacks
-
-    void Start()
-    {
-        string defaultName = "";
-        inputField = GetComponent<InputField>();
-        if (inputField != null)
+        public PlayerPrefFlags playerPrefFlag;
+        public enum PlayerPrefFlags
         {
-            if (PlayerPrefs.HasKey(playerPrefs[(int)playerPrefFlag]))
+            PlayerName,
+            GameRoomName
+        }
+
+        private bool _controllPlayerName;
+
+        #endregion public
+
+        #region Private Variables
+
+        private string[] playerPrefs = new string[] { Globals.PUNKeys.playerName, Globals.PUNKeys.gameRoomName };
+        InputField inputField;
+
+        #endregion private
+
+        #region MonoBehaviour CallBacks
+
+        void Start()
+        {
+            string defaultName = "";
+            inputField = GetComponent<InputField>();
+            if (inputField != null)
             {
-                defaultName = PlayerPrefs.GetString(playerPrefs[(int)playerPrefFlag]);
-                inputField.text = defaultName;
+                if (PlayerPrefs.HasKey(playerPrefs[(int)playerPrefFlag]))
+                {
+                    defaultName = PlayerPrefs.GetString(playerPrefs[(int)playerPrefFlag]);
+                    inputField.text = defaultName;
+                }
+            }
+
+            _controllPlayerName = playerPrefs[(int)playerPrefFlag] == Globals.PUNKeys.playerName;
+            if (_controllPlayerName)
+            {
+                PhotonNetwork.playerName = defaultName;
+                PhotonNetwork.player.NickName = defaultName;
             }
         }
 
-        _controllPlayerName = playerPrefs[(int)playerPrefFlag] == Globals.PUNKeys.playerName;
-        if (_controllPlayerName)
+        #endregion
+
+        #region Public Methods
+
+        public void SetPlayerName(string value)
         {
-            PhotonNetwork.playerName = defaultName;
-            PhotonNetwork.player.NickName = defaultName;
+            if (_controllPlayerName)
+            {
+                PhotonNetwork.playerName = inputField.text;
+                PhotonNetwork.player.NickName = inputField.text;
+            }
+            PlayerPrefs.SetString(playerPrefs[(int)playerPrefFlag], inputField.text);
         }
+
+        #endregion
     }
-
-    #endregion
-
-    #region Public Methods
-
-    public void SetPlayerName(string value)
-    {
-        if (_controllPlayerName)
-        {
-            PhotonNetwork.playerName = inputField.text;
-            PhotonNetwork.player.NickName = inputField.text;
-        }
-        PlayerPrefs.SetString(playerPrefs[(int)playerPrefFlag], inputField.text);
-    }
-
-    #endregion
 }
