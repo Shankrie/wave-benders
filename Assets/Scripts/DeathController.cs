@@ -59,7 +59,7 @@ namespace TAHL.WAVE_BENDER
                 if (transform.position.y >= _endPoint.y - 0.1f)
                 {
                     _lost = false;
-                    _gameController.EndGame();
+                    _gameController.EnableGameEndGUI(true);
                 }
             }
         }

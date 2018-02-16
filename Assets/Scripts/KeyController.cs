@@ -5,7 +5,7 @@ namespace TAHL.WAVE_BENDER
 {
     public class KeyController : MonoBehaviour
     {
-
+        public Vector3 GetStartPosition { get { return _startPosition; } }
         /// <summary>
         ///     Is player on right or left direction(1, -1);
         /// </summary>
@@ -30,9 +30,11 @@ namespace TAHL.WAVE_BENDER
         public bool ControlsView { get { return _pw.isMine; } }
 
         public KeyController[] SetKeyControllers { set { _playersKeyController = value; } }
+        public GameObject[] SetPlayers { set { _players = value; } }
 
 
         private KeyController[] _playersKeyController = null;
+        private GameObject[] _players = null;
 
         private KeyGenerator _keyGen;
         private CountDown _countDown;
@@ -41,9 +43,12 @@ namespace TAHL.WAVE_BENDER
         private DeathController _deathController;
         private PhotonView _pw;
 
+        private Vector3 _startPosition = Vector3.zero;
+
         private int _keyCount = 0;
 
         private bool _waveFlooded = false;
+        private bool _waveForceFlood = false;
 
         void Awake()
         {
@@ -58,6 +63,8 @@ namespace TAHL.WAVE_BENDER
 
             _deathController = GetComponent<DeathController>();
             _pw = GetComponent<PhotonView>();
+
+            _startPosition = transform.position;
 
             // setting keygen and countdown movement script when player controls view
             if (_pw.isMine)
@@ -79,7 +86,7 @@ namespace TAHL.WAVE_BENDER
         // Update is called once per frame
         void Update()
         {
-            if (!_pw.isMine || _waveFlooded || Progress >= _keyCount)
+            if (!_pw.isMine || _waveFlooded || _waveForceFlood || Progress >= _keyCount)
                 return;
 
             if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9]$").Success)
@@ -97,18 +104,18 @@ namespace TAHL.WAVE_BENDER
 
         private void OnGUI()
         {
-            string keys = "";
-            if (_pw.isMine)
-            {
-                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "Master: " + MyTurn.ToString());
-                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "View Mine: " + keys);
-            }
-            else
-            {
-                GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "Master: " + MyTurn.ToString());
+            //string keys = "";
+            //if (_pw.isMine)
+            //{
+            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "Master: " + MyTurn.ToString());
+            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "View Mine: " + keys);
+            //}
+            //else
+            //{
+            //    GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "Master: " + MyTurn.ToString());
  
-                GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "View Mine: " + keys);
-            }
+            //    GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "View Mine: " + keys);
+            //}
         }
 
 
@@ -197,8 +204,6 @@ namespace TAHL.WAVE_BENDER
         [PunRPC]
         public void InitializingRPC()
         {
-            _gameController.GetPlayerData();
-
             // Reset level and destroy leftovers if exist
             _keyGen.Level = 0;
             _keyGen.DestroySpawnedKeys();
@@ -209,13 +214,18 @@ namespace TAHL.WAVE_BENDER
 
 
             _playersKeyController = gameObject.GetComponentsByTag<KeyController>(Globals.Tags.Player);
-            foreach(GameObject go in GameObject.FindGameObjectsWithTag(Globals.Tags.Player))
+            if(_players == null)
+            {
+                _players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
+            }
+            foreach(GameObject go in _players)
             {
                 KeyController controller = go.GetComponent<KeyController>();
                 controller.MyTurn = controller.ControlsView == PhotonNetwork.isMasterClient;
                 controller.PlayerDirection = controller.MyTurn ? 1 : -1;
                 controller.Progress = 0;
                 controller.SetKeyCount = Globals.Difficulty.DifficultyLevels[_keyGen.Level];
+                controller.SetPlayers = _players;
 
                 if (controller.ControlsView)
                 {
@@ -264,7 +274,7 @@ namespace TAHL.WAVE_BENDER
         [PunRPC]
         public void ForceFloodWaveRPC()
         {
-            _waveFlooded = true;
+            _waveForceFlood = true;
             _waveMover.IncreaseSpeed();
             _keyGen.DestroySpawnedKeys();
         }
@@ -279,14 +289,17 @@ namespace TAHL.WAVE_BENDER
             _waveFlooded = true;
             _keyGen.DestroySpawnedKeys();
 
+            string loseCause = _waveForceFlood ? "Wrong key pressed" : string.Empty;
+            // this gameobject turn and it controls view
             if (MyTurn)
             {
                 _deathController.playerHaveLost(PlayerDirection);
+                _gameController.SetWinner(!_pw.isMine, string.Empty);
             }
             else
             {
-                GameObject[] players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
-                foreach (GameObject player in players)
+                _gameController.SetWinner(_pw.isMine, loseCause);
+                foreach (GameObject player in _players)
                 {
                     if (!GameObject.ReferenceEquals(player, gameObject))
                     {
@@ -306,11 +319,18 @@ namespace TAHL.WAVE_BENDER
             _waveMover.ResetWave();
             _waveMover.enabled = false;
             _waveFlooded = false;
+            _waveForceFlood = false;
 
             _keyGen.DestroySpawnedKeys();
 
-            _gameController.ResetLevel();
+            _gameController.EnableGameEndGUI(false);
             StartCountDown();
+
+            for(int i = 0; i < _players.Length; i++)
+            {
+                _players[i].transform.position = _playersKeyController[i].GetStartPosition;
+                _players[i].transform.rotation = Quaternion.identity;
+            }
         }
     }
 }

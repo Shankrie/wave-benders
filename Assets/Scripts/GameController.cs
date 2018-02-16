@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace TAHL.WAVE_BENDER
 {
@@ -10,6 +11,9 @@ namespace TAHL.WAVE_BENDER
         public Transform MasterClientPosition;
         // Initial Client Position
         public Transform ClientPosition;
+        // Winner label in Game End GUI
+        public Text WinnerLabel;
+        public Text LoseCause;
 
         private GameObject _masterClientObject;
         private GameObject _clientObject;
@@ -40,9 +44,20 @@ namespace TAHL.WAVE_BENDER
             }
         }
 
-        public void EndGame()
+        public void EnableGameEndGUI(bool enable)
         {
-            _gameEndGUI.SetActive(true);
+            _gameEndGUI.SetActive(enable);
+        }
+
+        public void SetWinner(bool win, string cause)
+        {
+            string message = "Winner";
+            if (!win)
+            {
+                message = "Loser";
+            }
+            WinnerLabel.text = message;
+            LoseCause.text = cause;
         }
 
         public void GotoMainMenu()
@@ -54,36 +69,31 @@ namespace TAHL.WAVE_BENDER
         /// <summary>
         /// Called on click, it's purpose is to call rpc which objective is to restart level
         /// </summary>
-        public void GetPlayerData()
+        public void RestartLevel()
         {
             try
             {
-                // Calls to reset level on all clients
-                if (_masterClientKeyController == null)
+                KeyController mineKeyController = null;
+                GameObject[] players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
+                foreach (GameObject player in players)
                 {
-                    GameObject[] players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
-                    foreach (GameObject player in players)
+                    KeyController keyController = player.GetComponent<KeyController>();
+                    if(mineKeyController == null && keyController.ControlsView)
                     {
-                        if (player.GetComponent<KeyController>().PlayerDirection == 1)
-                        {
-                            _masterClientObject = player;
-                            _masterClientKeyController = player.GetComponent<KeyController>();
-                        }
-                        else
-                        {
-                            _clientObject = player;
-                            _clientKeyController = player.GetComponent<KeyController>();
-                        }
+                        mineKeyController = keyController;
                     }
-                    if (_masterClientObject == null)
+                    if (player.GetComponent<KeyController>().PlayerDirection == 1)
                     {
-                        throw new System.Exception("Cannot find player who controls photon view");
+                        _masterClientObject = player;
+                        _masterClientKeyController = player.GetComponent<KeyController>();
                     }
-                    else if (_clientObject == null)
+                    else
                     {
-                        throw new System.Exception("Cannot find player who doesn't control photon view");
+                        _clientObject = player;
+                        _clientKeyController = player.GetComponent<KeyController>();
                     }
                 }
+                mineKeyController.ResetLevelCall();
             }
             catch (Exception ex)
             {
@@ -91,19 +101,6 @@ namespace TAHL.WAVE_BENDER
             }
         }
 
-        /// <summary>
-        /// Called only from movement component
-        /// </summary>
-        public void ResetLevel()
-        {
-            _masterClientObject.transform.position = MasterClientPosition.position;
-            _masterClientObject.transform.rotation = Quaternion.identity;
-
-            _clientObject.transform.position = ClientPosition.position;
-            _clientObject.transform.rotation = Quaternion.identity;
-
-            _gameEndGUI.SetActive(false);
-        }
 
         public void ReturnToLobby()
         {
