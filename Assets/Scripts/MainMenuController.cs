@@ -18,7 +18,7 @@ namespace TAHL.WAVE_BENDER
         {
             if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .5f, Screen.width * .25f, Screen.height * .05f), "Start Game"))
             {
-                SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+                SceneManager.LoadScene((int)Globals.SceneIndex.Lobby);
             }
             else if (GUI.Button(new Rect(Screen.width * .375f, Screen.height * .575f, Screen.width * .25f, Screen.height * .05f), "Credits"))
             {

@@ -105,7 +105,7 @@ namespace TAHL.WAVE_BENDER
         public void ReturnToLobby()
         {
             PhotonNetwork.LeaveRoom();
-            SceneManager.LoadScene((int)Globals.SceneIndex.Game);
+            SceneManager.LoadScene((int)Globals.SceneIndex.Lobby);
         }
     }
 }

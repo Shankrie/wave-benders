@@ -11,24 +11,52 @@ namespace TAHL.WAVE_BENDER
         {
             MainMenu = 0,
             Credits = 1,
-            Game = 2
+            Lobby = 2,
+            Game = 3
+        }
+
+        public enum PlayerPrefFlags
+        {
+            PlayerName,
+            GameRoomName,
+            CloudRegion
+        }
+
+        public static string[] PlayerPrefs = new string[] {
+            Globals.PUNKeys.playerName,
+            Globals.PUNKeys.gameRoomName,
+            Globals.PUNKeys.cloudRegion
+        };
+
+        public static string PUNVersion = "1.0";
+
+        public static partial class PUNAppIds
+        {
+            public const string chat = "29f6c1e9-d555-43c0-bbf7-ce05ad05cbbf";
         }
 
         public static partial class PUNKeys
         {
             public const string playerName = "playerName";
-            public const string gameRoomName = "gameRoom";
+            public const string gameRoomName = "roomName";
+            public const string cloudRegion = "cloudRegion";
         }
 
         public static partial class Tags
         {
+            public const string GameEndGUI = "GameEndGUI";
             public const string NetworkGUI = "NetworkGUI";
+            public const string ChatGUI = "ChatGUI";
             public const string KeyGen = "KeyGen";
             public const string Player = "Player";
             public const string Wave = "Wave";
             public const string CountDown = "CountDown";
-            public const string GameEndGUI = "GameEndGUI";
             public const string GameController = "GameController";
+            public const string NetworkManager = "NetworkManager";
+            public const string NetworkInputs = "NetworkInputs";
+            public const string NetworkButtons = "NetworkButtons";
+            public const string NetworkTexts = "NetworkTexts";
+            public const string ChatContent = "ChatContent";
         }
 
         public static partial class Defaults

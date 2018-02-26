@@ -1,4 +1,6 @@
 ﻿using Photon;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,177 +10,322 @@ namespace TAHL.WAVE_BENDER
 {
     public class NetworkManager : PunBehaviour
     {
-        #region Public buttons
-
-        public Transform MasterClientPosition;
-        public Transform ClientPosition;
-
-        public Button HostButton;
-        public Button JoinButton;
-
-        public GameObject waitingForPlayer;
-
-        #endregion buttons
+        #region Public variables
+        public ChatController ChatController = null;
+        #endregion
 
         #region Private variables
 
-        private GameObject _networkingGUI;
+        private enum NetworkButtonsEnum
+        {
+            Connect,
+            Disconnect,
+            Host,
+            Join,
+            StartGame,
+            Return,
+            Exit
+        }
 
-        private string Version = "1.0";
-        private string LocalIp = "127.0.0.1";
-        private string _connectState = "";
+        private enum NetworkInputsEnum
+        {
+            PlayerName,
+            RoomName,
+            Region
+        }
 
-        private int Port = 5055;
+        private enum NetworkTextEnum
+        {
+            RequiredToConnect,
+            CurrentlyConnected,
+            NetworkState,
+            ErrorState
+        }
 
-        private bool _joinHostBtnsActive = false;
+        private Button[] _networkButtons = null;
+        private Selectable[] _networkInputs = null;
+        private Text[] _networkTexts = null;
+
+        private GameObject _chatGUI = null;
+
+        private string[] _networkBtnNames = new string[] { "Connect", "Disconnect", "Host", "Join", "StartGame", "Return", "Exit" };
+        private string[] _networkInputNames = new string[] { "PlayerName", "RoomName", "RegionDropdown" };
+        private string[] _networkTextNames = new string[] { "RequiredToConnect", "CurrentlyConnected", "NetworkState", "ErrorState" };
+
+        private string _networkState = string.Empty;
+        private string _errorState = string.Empty;
+        private string _playerName = string.Empty;
+        private string _roomName = string.Empty;
+
+        private const string LocalIp = "127.0.0.1";
+
+        private bool _joinedRoom = false;
+        private bool _isConnected = false;
 
         #endregion vars
 
-        #region Unity default methods
+        #region private methods
 
         private void Start()
         {
-            HostButton.interactable = false;
-            JoinButton.interactable = false;
+            if (ChatController == null)
+                throw new Exception("Error. Chat controller not supplied in network manager script");
 
-            waitingForPlayer.SetActive(false);
+            SetupUI(ref _networkButtons, _networkBtnNames, Globals.Tags.NetworkButtons);
+            SetupUI(ref _networkInputs, _networkInputNames, Globals.Tags.NetworkInputs);
+            SetupUI(ref _networkTexts, _networkTextNames, Globals.Tags.NetworkTexts);
 
-            _networkingGUI = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkGUI);
+            foreach (Selectable networkInput in _networkInputs)
+            {
+                networkInput.interactable = false;
+            }
+
+            _networkButtons[(int)NetworkButtonsEnum.Disconnect].interactable = false;
+            _networkButtons[(int)NetworkButtonsEnum.Host].interactable = false;
+            _networkButtons[(int)NetworkButtonsEnum.Join].interactable = false;
+            _networkButtons[(int)NetworkButtonsEnum.StartGame].interactable = false;
+
+            _networkTexts[(int)NetworkTextEnum.RequiredToConnect].gameObject.SetActive(false);
+            _networkTexts[(int)NetworkTextEnum.CurrentlyConnected].gameObject.SetActive(false);
+
+            _chatGUI = GameObject.FindGameObjectWithTag(Globals.Tags.ChatGUI);
+            if (_chatGUI == null)
+                throw new Exception("Error. No Chat GUI is present or tag is missing");
+            _chatGUI.SetActive(false);
+
             PhotonNetwork.sendRate = 30;
             PhotonNetwork.sendRateOnSerialize = 30;
-
-            // Sync scene means when player connects he get's all latest objects positions and stuff like dat.
-            ConnectToServer();
+            PhotonNetwork.automaticallySyncScene = true;
         }
+
+
 
         private void Update()
         {
-            if (PhotonNetwork.connected == true && _joinHostBtnsActive == false)
+            if (PhotonNetwork.connected != _isConnected)
             {
-                _joinHostBtnsActive = true;
-                HostButton.interactable = true;
-                JoinButton.interactable = true;
+                _isConnected = PhotonNetwork.connected;
+                foreach (Selectable networkInput in _networkInputs)
+                {
+                    networkInput.interactable = _isConnected;
+                }
+
+                _networkButtons[(int)NetworkButtonsEnum.Connect].interactable = !_isConnected;
+                _networkButtons[(int)NetworkButtonsEnum.Disconnect].interactable = _isConnected;
+                _networkButtons[(int)NetworkButtonsEnum.Host].interactable = _isConnected;
+                _networkButtons[(int)NetworkButtonsEnum.Join].interactable = _isConnected;
+                _networkButtons[(int)NetworkButtonsEnum.StartGame].interactable = false;
             }
-            else if (PhotonNetwork.connected == false && _joinHostBtnsActive == true)
+
+            _networkTexts[(int)NetworkTextEnum.NetworkState].text = PhotonNetwork.connectionState.ToString() + ". " + _networkState;
+            _networkTexts[(int)NetworkTextEnum.ErrorState].text = _errorState;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="UIComponents">Array with fixed length</param>
+        /// <param name="names">names for gameobject to check</param>
+        /// <param name="tag">tag </param>
+        private void SetupUI<T>(ref T[] UIComponents, string[] names, string tag)
+        {
+            GameObject[] UIObjects = GameObject.FindGameObjectsWithTag(tag);
+            UIComponents = new T[UIObjects.Length];
+            for (int i = 0; i < UIObjects.Length; i++)
             {
-                _joinHostBtnsActive = false;
-                HostButton.interactable = false;
-                JoinButton.interactable = false;
+                UIComponents[i] = UIObjects[i].GetComponent<T>();
+            }
+
+            // Sort by names
+            for (int i = 0; i < UIObjects.Length - 1; i++)
+            {
+                int j = i;
+                while (UIObjects[i].name != names[i])
+                {
+                    j++;
+                    if (UIObjects.Length <= j)
+                    {
+                        throw new Exception("Cannot find name " + names[i]);
+                    }
+                    Swap<GameObject>(ref UIObjects[i], ref UIObjects[j]);
+                    Swap<T>(ref UIComponents[i], ref UIComponents[j]);
+                }
             }
         }
 
-        private void OnGUI()
+        private void Swap<T>(ref T firstObject, ref T secondObject)
         {
-            if (_networkingGUI.activeSelf)
-                GUI.TextField(new Rect(0, 0, 250, 50), _connectState);
+            T temp = firstObject;
+            firstObject = secondObject;
+            secondObject = temp;
+
+        }
+
+        private bool IsReadyToPair()
+        {
+            if (!PhotonNetwork.connectedAndReady)
+            {
+                _errorState = "Connect first!";
+                return false;
+            }
+
+            // Check if player name is entered
+            _playerName = PlayerPrefs.GetString(Globals.PUNKeys.playerName);
+            if (string.IsNullOrEmpty(_playerName))
+            {
+                _errorState = "Room name must be filled";
+                return false;
+            }
+
+            // Assert that each player has unique name.
+            if (!IsPlayerNameUnique())
+                return false;
+
+            // Check if room name is entered
+            _roomName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
+            if (string.IsNullOrEmpty(_roomName))
+            {
+                _errorState = "Room name must be filled";
+                return false;
+            }
+            return true;
+        }
+
+        private bool IsPlayerNameUnique()
+        {
+            _playerName = PlayerPrefs.GetString(Globals.PUNKeys.playerName);
+
+            // Assert that each player has unique name.
+            PhotonPlayer photonPlayer = PhotonNetwork.playerList.FirstOrDefault(
+                player => player.NickName.ToLower() == _playerName.ToLower()
+            );
+            if (photonPlayer != null)
+            {
+                _errorState = String.Format("Name {0} is already taken!", _playerName);
+                return false;
+            }
+            return true;
         }
 
         #endregion
 
-        #region Connect, Create or Join Rooms, Disconnect, Reconnect onclick methods
+
+        #region Photon inherited methods and events
+
+        public override void OnJoinedLobby()
+        {
+            _errorState = string.Empty;
+            _networkState = "Joined in lobby";
+        }
+
+        public override void OnJoinedRoom()
+        {
+            _chatGUI.SetActive(true);
+            ChatController.InitializeChatConnection();
+
+            _errorState = string.Empty;
+            _networkState = "Joined room";
+
+            foreach (Selectable networkInput in _networkInputs)
+            {
+                networkInput.interactable = false;
+            }
+
+            _networkButtons[(int)NetworkButtonsEnum.Host].interactable = false;
+            _networkButtons[(int)NetworkButtonsEnum.Join].interactable = false;
+
+            _networkTexts[(int)NetworkTextEnum.RequiredToConnect].gameObject.SetActive(true);
+            _networkTexts[(int)NetworkTextEnum.CurrentlyConnected].text = "Currently Connected: " + PhotonNetwork.playerList.Length;
+            _networkTexts[(int)NetworkTextEnum.CurrentlyConnected].gameObject.SetActive(true);
+
+            if (PhotonNetwork.isMasterClient)
+            {
+                _networkButtons[(int)NetworkButtonsEnum.StartGame].interactable = true;
+            }
+            _joinedRoom = true;
+
+
+        }
+
+        #endregion
+
+
+        #region Connect, Create or Join Rooms, Disconnect on click methods
 
         public void ConnectToServer()
         {
+            if (PhotonNetwork.connected)
+                return;
+
+            _errorState = string.Empty;
+
             PhotonNetwork.logLevel = PhotonLogLevel.Full;
             PhotonNetwork.autoJoinLobby = true;
 
-            // Connect to cloud server
-            //PhotonNetwork.ConnectToRegion(CloudRegionCode.eu, "v1.0");
+            int region = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
+            string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
+            Array values = Enum.GetValues(typeof(CloudRegionCode));
+            PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
 
-            // Connect to local server
-            PhotonNetwork.ConnectToMaster(LocalIp, Port, string.Empty, Version);
-            _connectState = "Connecting to: " + LocalIp + ":" + Port;
+            // Use to connect to local server
+            //PhotonNetwork.ConnectToMaster(LocalIp, Port, string.Empty, Globals.PUNVersion);
         }
 
-        public void OnConnectedToServer()
+        public void DisconnectFromServer()
         {
-            _connectState = "Connected";
+            _networkState = string.Empty;
+            PhotonNetwork.Disconnect();
         }
 
         public void HostRoom()
         {
-            if (!PhotonNetwork.connectedAndReady)
-            {
-                _connectState = "Connect first!";
+            _errorState = string.Empty;
+            if (!IsReadyToPair())
                 return;
-            }
-
-            // Check if room name is entered
-            string roomName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
-            if (string.IsNullOrEmpty(roomName))
-            {
-                _connectState = "Room name must be filled";
-                return;
-            }
 
             RoomOptions roomOpts = new RoomOptions() { IsVisible = true, MaxPlayers = 2 };
-            PhotonNetwork.CreateRoom(roomName, roomOpts, TypedLobby.Default);
+            PhotonNetwork.CreateRoom(_roomName, roomOpts, TypedLobby.Default);
         }
 
         public void JoinRoom()
         {
-            if (!PhotonNetwork.connectedAndReady)
-            {
-                _connectState = "Connect first!";
+            _errorState = string.Empty;
+            if (!IsReadyToPair())
                 return;
-            }
-
-            // Check if room name and player name are entered
-            string roomName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
-            if (string.IsNullOrEmpty(roomName))
-            {
-                _connectState = "Room name must be filled";
-                return;
-            }
 
             // Check if specified room exists and if player with same name doesn't exist
-            bool roomExist = PhotonNetwork.GetRoomList().Count(room => room.Name == roomName) > 0;
+            bool roomExist = PhotonNetwork.GetRoomList().Count(room => room.Name == _roomName) > 0;
             if (roomExist)
-                PhotonNetwork.JoinRoom(roomName);
+                PhotonNetwork.JoinRoom(_roomName);
             else
-                _connectState = "Room doesn't exist";
+                _errorState = "Room doesn't exist";
         }
 
-        public void OnReconnect()
+        public void StartGame()
         {
-            PhotonNetwork.Disconnect();
+            if (PhotonNetwork.playerList.Length > 1)
+            {
+                PhotonNetwork.LoadLevel((int)Globals.SceneIndex.Game);
+            }
+            else
+            {
+                _errorState = "Wait for opponnent to connect";
+            }
         }
 
-        public void OnReturn()
+        public void Return()
         {
             PhotonNetwork.Disconnect();
             SceneManager.LoadScene((int)Globals.SceneIndex.MainMenu);
         }
 
+        public void Exit()
+        {
+            PhotonNetwork.Disconnect();
+            Application.Quit();
+        }
+
         #endregion connect methods
-
-        #region Photon inherited methods
-
-        public override void OnJoinedLobby()
-        {
-            _connectState = "Joined in lobby";
-        }
-
-        public override void OnJoinedRoom()
-        {
-            // Spawn player from Resources folder
-            if (PhotonNetwork.isMasterClient)
-            {
-                waitingForPlayer.SetActive(true);
-                PhotonNetwork.Instantiate(Globals.PrefabNames.MasterClient, MasterClientPosition.position, Quaternion.identity, 0);
-            }
-            else
-            {
-                PhotonNetwork.Instantiate(Globals.PrefabNames.Client, ClientPosition.position, Quaternion.identity, 0);
-            }
-            _networkingGUI.SetActive(false);
-        }
-
-        public override void OnDisconnectedFromPhoton()
-        {
-            ConnectToServer();
-        }
-
-        #endregion
     }
 }
