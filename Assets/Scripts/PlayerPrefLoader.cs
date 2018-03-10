@@ -36,6 +36,9 @@ namespace TAHL.WAVE_BENDER
                 case (int)Globals.PlayerPrefFlags.CloudRegion:
                     SetPrefFromDropdown();
                     break;
+                case (int)Globals.PlayerPrefFlags.ChatRegion:
+                    SetPrefFromDropdown();
+                    break;
                 default:
                     break;
             }
