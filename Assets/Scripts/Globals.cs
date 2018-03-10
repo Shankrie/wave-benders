@@ -19,14 +19,56 @@ namespace TAHL.WAVE_BENDER
         {
             PlayerName,
             GameRoomName,
-            CloudRegion
+            CloudRegion,
+            ChatRegion
+        }
+
+        public enum NetworkButtonsEnum
+        {
+            Connect,
+            Disconnect,
+            Host,
+            Join,
+            StartGame,
+            Return,
+            Exit
+        }
+
+        public enum NetworkInputsEnum
+        {
+            PlayerName,
+            RoomName,
+            CloudRegion,
+            ChatRegion
+        }
+
+        public enum NetworkTextEnum
+        {
+            RequiredToConnect,
+            CurrentlyConnected,
+            NetworkState,
+            ErrorState
         }
 
         public static string[] PlayerPrefs = new string[] {
             Globals.PUNKeys.playerName,
             Globals.PUNKeys.gameRoomName,
-            Globals.PUNKeys.cloudRegion
+            Globals.PUNKeys.cloudRegion,
+            Globals.PUNKeys.chatRegion
         };
+
+        public enum ChatRegionCode
+        {
+            asia,
+            eu,
+            us
+        }
+
+        public enum RegionType
+        {
+            Cloud,
+            Chat
+        }
 
         public static string PUNVersion = "1.0";
 
@@ -40,6 +82,7 @@ namespace TAHL.WAVE_BENDER
             public const string playerName = "playerName";
             public const string gameRoomName = "roomName";
             public const string cloudRegion = "cloudRegion";
+            public const string chatRegion = "chatRegion";
         }
 
         public static partial class Tags
@@ -57,6 +100,7 @@ namespace TAHL.WAVE_BENDER
             public const string NetworkButtons = "NetworkButtons";
             public const string NetworkTexts = "NetworkTexts";
             public const string ChatContent = "ChatContent";
+            public const string GUIBackground = "GUIBackground";
         }
 
         public static partial class Defaults

@@ -9,20 +9,20 @@ namespace TAHL.WAVE_BENDER
     [RequireComponent(typeof(Dropdown))]
     public class RegionField: MonoBehaviour
     {
-        public int SelectedRegionIndex = 0;
-
+        public Globals.RegionType regionType = 0;
+        
         private Dropdown _regionDropdown;
 
-        private List<string> _regionNames;
         private int _selectedIndex = 0;
 
+        private Type[] regionTypes = new Type[] { typeof(CloudRegionCode), typeof(Globals.ChatRegionCode) };
 
         private void Awake()
         {
             _regionDropdown = GetComponent<Dropdown>();
-            _regionNames = Enum.GetNames(typeof(CloudRegionCode)).ToList();
 
-            _regionDropdown.AddOptions(_regionNames);
+            string[] regionNames = Enum.GetNames(regionTypes[(int)regionType]);
+            _regionDropdown.AddOptions(regionNames.ToList());
         }
 
         public int GetSelectedIndex()
