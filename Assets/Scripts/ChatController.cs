@@ -10,12 +10,18 @@ using UnityEngine.UI;
 
 namespace TAHL.WAVE_BENDER
 {
+    [RequireComponent(typeof(RectTransform))]
     [RequireComponent(typeof(InputField))]
+    [RequireComponent(typeof(Image))]
     public class ChatController : Photon.MonoBehaviour, IChatClientListener
     {
 
         #region publicVars
-        public GameObject chatMessage = null;
+        public Image ScrollViewImage = null; 
+        public GameObject ChatMessage = null;
+        public GameObject ChatRefresh = null;
+
+        public bool IsChatConnected { get { return _connected; } }
         #endregion publicVars
 
         #region privateVars
@@ -25,41 +31,80 @@ namespace TAHL.WAVE_BENDER
 
         private NetworkManager _networkManager = null;
         private ChatClient _chatClient = null;
+        private RectTransform _backgroundRect = null;
+        private RectTransform _chatRect = null;
+        private RectTransform _myRect = null;
         private InputField _myInputField = null;
+        private Image _myImage = null;
 
         private string _channelName = null;
         private string _userId = null;
 
+        private float lastPrefferedHeight = 16;
+
         private const float dServeTime = 0.1f;
-        private const int MSG_MARGIN = 30;
-        private const int MAX_MSG_IN_SCREEN = 5;
+        private const int MAX_MSG_IN_SCREEN = 12;
+        private const int OVERFLOW_SIZE = 28;
 
         private bool _subscribedToRoom = false;
-        private bool _triedConnect = false;
+        private bool _connected = false;
+
+        private bool _chatExpanded = false;
 
         #endregion privateVars
 
-        // Use this for initialization
-        void Start()
+        // Use this for initialization because after Network Manager Start method some content won't be available
+        void Awake()
         {
             // Asure objects are ready
-            if (chatMessage == null)
+            if (ScrollViewImage == null)
+                throw new Exception("Error. Chat scroll view image script not supplied");
+
+            if (ChatMessage == null)
                 throw new Exception("Error. Chat message object not supplied");
+
+            if (ChatRefresh == null)
+                throw new Exception("Error. Chat refresh button not supplied");
+            ChatRefresh.SetActive(false);
 
             GameObject networkManagerObject = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkManager);
             if (networkManagerObject == null)
                 throw new Exception("Error. No Network Manager in Scene");
 
-            // get chat content gameobject and input field
             _networkManager = networkManagerObject.GetComponent<NetworkManager>();
+            if (_networkManager == null)
+                throw new Exception("Error. Network manager couldn't be found");
+
+            // get chat content gameobject and input field
             _chatContent = GameObject.FindGameObjectWithTag(Globals.Tags.ChatContent);
+            if (_chatContent == null)
+                throw new Exception("Error. Chat content couldn't be found");
+
+            _chatRect = _chatContent.transform.parent.parent.GetComponent<RectTransform>();
+            if (_chatRect == null)
+                throw new Exception("Error Chat ScrollView Rect Transform couldn't be found");
+
+            GameObject background = transform.parent.GetChildByTag(Globals.Tags.GUIBackground);
+            if (background== null)
+                throw new Exception("Error. Chat background couldn't be found");
+            _backgroundRect = background.GetComponent<RectTransform>();
+
+            _myRect = GetComponent<RectTransform>();
             _myInputField = GetComponent<InputField>();
+            _myImage = GetComponent<Image>();
+
+            _myInputField.interactable = false;
         }
 
         #region ChatClientInterfaceProps
 
         public void OnConnected()
         {
+            Debug.Log("Connected");
+
+            ChatRefresh.SetActive(false);
+
+            _connected = true;
             _chatClient.Subscribe(new[] { _channelName });
             _chatClient.SetOnlineStatus(ChatUserStatus.Online);
         }
@@ -67,6 +112,13 @@ namespace TAHL.WAVE_BENDER
         public void OnDisconnected()
         {
             Debug.Log("Disonnected: " + _chatClient.DisconnectedCause.ToString());
+
+            ChatRefresh.SetActive(true);
+            _myInputField.interactable = false;
+            SetUpChatColor(false);
+            StopAllCoroutines();
+
+            _connected = false;
         }
 
         public void OnPrivateMessage(string sender, object message, string channelName)
@@ -83,6 +135,9 @@ namespace TAHL.WAVE_BENDER
         {
             Debug.Log("Subscribed");
             _subscribedToRoom = true;
+
+            _myInputField.interactable = true;
+            _myInputField.placeholder.gameObject.SetActive(false);
         }
 
         public void OnApplicationQuit()
@@ -114,36 +169,84 @@ namespace TAHL.WAVE_BENDER
         {
             while(true)
             {
-                yield return new WaitForSeconds(dServeTime);
+                float serveTime = Time.time + dServeTime;
+                if(Time.time < serveTime)
+                {
+                    yield return null;
+                }
+
                 _chatClient.Service();
             }
         }
 
         #endregion
 
+        public void OnValueChange(string value)
+        {
+            if(Regex.Match(value, @"[^\r]{1}\n").Success)
+            {
+                Regex.Replace(value, @"\r\n", string.Empty);
+                SendText(value);
+                if (_chatExpanded)
+                    ExpandChat(!_chatExpanded);
+                return;
+            }
+
+            // Expand chat if 
+            int msgHeight = (int)_myInputField.preferredHeight;
+            if((!_chatExpanded && msgHeight > OVERFLOW_SIZE) || (
+                _chatExpanded && msgHeight <= OVERFLOW_SIZE))
+            {
+                ExpandChat(!_chatExpanded);
+            }
+        }
+
+        /// <summary>
+        /// Expands or Decrease chat input field height and moves chat
+        /// </summary>
+        /// <param name="expand"></param>
+        private void ExpandChat(bool expand)
+        {
+            _chatExpanded = expand;
+            int margin = expand ? 16 : -16;
+            Vector2 positionMargin = new Vector2(0, margin);
+            Vector2 sizeMargin = new Vector2(0, margin * 2);
+
+            _myRect.IncreaseSizeAndPos(positionMargin, sizeMargin);
+            _backgroundRect.IncreaseSizeAndPos(positionMargin, sizeMargin);
+            _chatRect.IncreaseSizeAndPos(positionMargin * 2, Vector2.zero);
+        }
+
+        /// <summary>
+        /// Initializes chat client and connect to chat room
+        /// </summary>
         public void InitializeChatConnection()
         {
-            _triedConnect = true;
+            // Get chat region
+            List<string> regionNames = Enum.GetNames(typeof(Globals.ChatRegionCode)).ToList();
+            int regionIndex = PlayerPrefs.GetInt(Globals.PUNKeys.chatRegion);
 
-            List<string> regionNames = Enum.GetNames(typeof(CloudRegionCode)).ToList();
-            int regionIndex = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
-
+            // Set channel name to game room name and userid to player name
             _channelName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
             _userId = PlayerPrefs.GetString(Globals.PUNKeys.playerName);
 
-            // initialize chat client
+            // Initialize chat client
             _chatClient = new ChatClient(this);
-            _chatClient.ChatRegion = regionNames[regionIndex];
+            _chatClient.ChatRegion = regionNames[regionIndex].ToUpper();
             _chatClient.Connect(
                 Globals.PUNAppIds.chat,
                 Globals.PUNVersion,
                 new ExitGames.Client.Photon.Chat.AuthenticationValues(_userId));
             Application.runInBackground = true;
 
+            // Start serving messages
             StartCoroutine("ServeMessages");
         }
 
-        public void SendText()
+        /// <summary>
+        /// Send text to other users
+        /// </summary>
+        public void SendText(string text)
         {
             if (_subscribedToRoom == false)
             {
@@ -151,8 +254,11 @@ namespace TAHL.WAVE_BENDER
                 return;
             }
 
-            string text = _myInputField.text;
             _myInputField.text = string.Empty;
+            if(Regex.Match(text, @"^\s*$").Success)
+            {
+                return;
+            }
 
             _chatClient.PublishMessage(_channelName, text);
         }
@@ -166,18 +272,19 @@ namespace TAHL.WAVE_BENDER
             CreateMessage(fullMsg, senders[0], senders.Contains(_userId));
         }
 
-
         private void CreateMessage(string text, string sender, bool myMessage)
         {
-            GameObject message = Instantiate(chatMessage,
-                new Vector3(0, 0, 0),
+            GameObject message = Instantiate(ChatMessage,
+                ChatMessage.transform.position,
                 Quaternion.identity,
                 _chatContent.transform);
 
             SetUpMessage(message, sender, text, myMessage);
-            AppendMessageOnOthers(message);
         }
 
+        /// <summary>
+        /// Set component text to formatted message
+        /// </summary>
         private void SetUpMessage(GameObject message, string sender, string text, bool myMessage)
         {
             Text msgText = message.GetComponent<Text>();
@@ -191,26 +298,75 @@ namespace TAHL.WAVE_BENDER
             }
             else
             {
+                msgText.color = Color.black;
                 msgText.text = String.Format("{0}: {1}", sender, text);
             }
             message.SetActive(true);
 
+            AppendMessageOnOthers(message, (int)msgText.preferredHeight);
         }
 
-        public void AppendMessageOnOthers(GameObject message)
+        /// <summary>
+        /// Method append new message to list and moves other messages to top
+        /// </summary>
+        /// <param name="margin">Message preffered height</param>
+        private void AppendMessageOnOthers(GameObject message, int margin)
         {
-            foreach(GameObject chatMsg in _chatMessages)
+            foreach (GameObject chatMsg in _chatMessages)
             {
-                chatMsg.transform.position += new Vector3(0, MSG_MARGIN, 0);
+                chatMsg.transform.position += new Vector3(0, margin, 0);
             }
 
+            // if new message exceeds prefab message preffered height then lower it
+            if (margin > OVERFLOW_SIZE)
+            {
+                margin -= (margin / 4);
+            }
+            message.transform.position += new Vector3(0, margin, 0);
             _chatMessages.Add(message);
+
             if (_chatMessages.Count == MAX_MSG_IN_SCREEN)
             {
                 GameObject firstMessage = _chatMessages[0];
                 _chatMessages.Remove(firstMessage);
                 Destroy(firstMessage);
             }
+        }
+
+        /// <summary>
+        /// Method which set chat by supplied state
+        /// </summary>
+        /// <param name="enabled"></param>
+        public void SetUpChat(bool enabled)
+        {
+            if (_chatClient == null && !enabled)
+                return;
+
+            SetUpChatColor(enabled);
+            if(enabled)
+            {
+                StopAllCoroutines();
+                InitializeChatConnection();
+            }
+            else
+            {
+                _myInputField.interactable = false;
+                _myInputField.placeholder.gameObject.SetActive(true);
+                _chatClient.Disconnect();
+            }
+        }
+
+        public void SetUpChatColor(bool enabled)
+        {
+            Color enabledColor = enabled ? Color.white : new Color(0.447f, 0.447f, 0.447f, 0.5f);
+            ScrollViewImage.color = enabledColor;
+            _myImage.color = enabledColor;
+        }
+
+        public void Refresh()
+        {
+            SetUpChat(true);
+            ChatRefresh.SetActive(false);
         }
 
     }
