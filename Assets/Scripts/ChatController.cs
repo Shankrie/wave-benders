@@ -40,10 +40,10 @@ namespace TAHL.WAVE_BENDER
         private string _channelName = null;
         private string _userId = null;
 
-        private float lastPrefferedHeight = 16;
+        private float nextServeTime;
 
         private const float dServeTime = 0.1f;
-        private const int MAX_MSG_IN_SCREEN = 12;
+        private const int MAX_MSG_IN_SCREEN = 25;
         private const int OVERFLOW_SIZE = 28;
 
         private bool _subscribedToRoom = false;
@@ -94,6 +94,14 @@ namespace TAHL.WAVE_BENDER
             _myImage = GetComponent<Image>();
 
             _myInputField.interactable = false;
+
+            nextServeTime = Time.time;
+        }
+
+        void Update()
+        {
+            if (_connected)
+                _chatClient.Service();
         }
 
         #region ChatClientInterfaceProps
@@ -140,12 +148,6 @@ namespace TAHL.WAVE_BENDER
             _myInputField.placeholder.gameObject.SetActive(false);
         }
 
-        public void OnApplicationQuit()
-        {
-            if(_chatClient != null) _chatClient.Disconnect();
-            StopAllCoroutines();
-        }
-
         public void DebugReturn(DebugLevel level, string message)
         {
             Debug.Log("DebugReturn");
@@ -165,21 +167,19 @@ namespace TAHL.WAVE_BENDER
 
         #region Coroutines
 
-        private IEnumerator ServeMessages()
-        {
-            while(true)
-            {
-                float serveTime = Time.time + dServeTime;
-                if(Time.time < serveTime)
-                {
-                    yield return null;
-                }
+        //private IEnumerator ServeMessages()
+        //{
+        //    while(true)
+        //    {
+        //        yield return new WaitForSeconds(0.1f);
 
-                _chatClient.Service();
-            }
-        }
+        //        _chatClient.Service();
+        //    }
+        //}
 
         #endregion
+
+        #region OnValueChange, OnClick Methods
 
         public void OnValueChange(string value)
         {
@@ -217,13 +217,22 @@ namespace TAHL.WAVE_BENDER
             _chatRect.IncreaseSizeAndPos(positionMargin * 2, Vector2.zero);
         }
 
+
+        public void Refresh()
+        {
+            SetUpChat(true);
+            ChatRefresh.SetActive(false);
+        }
+
+        #endregion
+
         /// <summary>
         /// Initializes chat client and connect to chat room
         /// </summary>
         public void InitializeChatConnection()
         {
             // Get chat region
-            List<string> regionNames = Enum.GetNames(typeof(Globals.ChatRegionCode)).ToList();
+            List<string> regionNames = Enum.GetNames(typeof(Globals.Enums.ChatRegionCode)).ToList();
             int regionIndex = PlayerPrefs.GetInt(Globals.PUNKeys.chatRegion);
 
             // Set channel name to game room name and userid to player name
@@ -239,8 +248,9 @@ namespace TAHL.WAVE_BENDER
                 new ExitGames.Client.Photon.Chat.AuthenticationValues(_userId));
             Application.runInBackground = true;
 
+            _connected = true;
             // Start serving messages
-            StartCoroutine("ServeMessages");
+            // StartCoroutine("ServeMessages");
         }
 
         /// <summary>
@@ -312,17 +322,16 @@ namespace TAHL.WAVE_BENDER
         /// <param name="margin">Message preffered height</param>
         private void AppendMessageOnOthers(GameObject message, int margin)
         {
-            foreach (GameObject chatMsg in _chatMessages)
+            if (_chatMessages.Count > 0)
             {
-                chatMsg.transform.position += new Vector3(0, margin, 0);
+                foreach (GameObject chatMsg in _chatMessages)
+                {
+                    chatMsg.transform.position += new Vector3(0, margin, 0);
+                }
             }
-
-            // if new message exceeds prefab message preffered height then lower it
-            if (margin > OVERFLOW_SIZE)
-            {
-                margin -= (margin / 4);
-            }
-            message.transform.position += new Vector3(0, margin, 0);
+            // Use anchored position because Chat Message transform position doesn't exist yet
+            // Lift vertical position by half of message size
+            message.GetComponent<RectTransform>().anchoredPosition += new Vector2(0, margin * 0.5f);
             _chatMessages.Add(message);
 
             if (_chatMessages.Count == MAX_MSG_IN_SCREEN)
@@ -363,11 +372,10 @@ namespace TAHL.WAVE_BENDER
             _myImage.color = enabledColor;
         }
 
-        public void Refresh()
+        public void OnApplicationQuit()
         {
-            SetUpChat(true);
-            ChatRefresh.SetActive(false);
+            if (_chatClient != null) _chatClient.Disconnect();
+            StopAllCoroutines();
         }
-
     }
 }

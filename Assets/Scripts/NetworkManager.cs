@@ -20,11 +20,6 @@ namespace TAHL.WAVE_BENDER
         private Selectable[] _networkInputs = null;
         private Text[] _networkTexts = null;
 
-        private GameObject _chatGUI = null;
-
-        private string[] _networkBtnNames = new string[] { "Connect", "Disconnect", "Host", "Join", "StartGame", "Return", "Exit" };
-        private string[] _networkInputNames = new string[] { "PlayerName", "RoomName", "CloudRegion", "ChatRegion" };
-        private string[] _networkTextNames = new string[] { "RequiredToConnect", "CurrentlyConnected", "NetworkState", "ErrorState" };
 
         private string _networkState = string.Empty;
         private string _errorState = string.Empty;
@@ -33,7 +28,6 @@ namespace TAHL.WAVE_BENDER
 
         private const string LocalIp = "127.0.0.1";
 
-        private bool _joinedRoom = false;
         private bool _isConnected = false;
 
         #endregion vars
@@ -45,31 +39,24 @@ namespace TAHL.WAVE_BENDER
             if (ChatController == null)
                 throw new Exception("Error. Chat controller not supplied in network manager script");
 
-            SetupUI(ref _networkButtons, _networkBtnNames, Globals.Tags.NetworkButtons);
-            SetupUI(ref _networkInputs, _networkInputNames, Globals.Tags.NetworkInputs);
-            SetupUI(ref _networkTexts, _networkTextNames, Globals.Tags.NetworkTexts);
+            SetupUI(ref _networkButtons, Globals.Names.NetworkButtons, Globals.Tags.NetworkButtons);
+            SetupUI(ref _networkInputs, Globals.Names.NetworkInputs, Globals.Tags.NetworkInputs);
+            SetupUI(ref _networkTexts, Globals.Names.NetworkTexts, Globals.Tags.NetworkTexts);
 
-            _networkInputs[(int)Globals.NetworkInputsEnum.PlayerName].interactable = false;
-            _networkInputs[(int)Globals.NetworkInputsEnum.RoomName].interactable = false;
-            _networkInputs[(int)Globals.NetworkInputsEnum.CloudRegion].interactable = true;
-            _networkInputs[(int)Globals.NetworkInputsEnum.ChatRegion].interactable = true;
+            _networkInputs[(int)Globals.Enums.NetworkInputs.PlayerName].interactable = false;
+            _networkInputs[(int)Globals.Enums.NetworkInputs.RoomName].interactable = false;
+            _networkInputs[(int)Globals.Enums.NetworkInputs.CloudRegion].interactable = true;
+            _networkInputs[(int)Globals.Enums.NetworkInputs.ChatRegion].interactable = true;
 
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Disconnect].interactable = false;
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Host].interactable = false;
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Join].interactable = false;
-            _networkButtons[(int)Globals.NetworkButtonsEnum.StartGame].interactable = false;
-
-            _chatGUI = GameObject.FindGameObjectWithTag(Globals.Tags.ChatGUI);
-            if (_chatGUI == null)
-                throw new Exception("Error. No Chat GUI is present or tag is missing");
-            _chatGUI.SetActive(false);
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Disconnect].interactable = false;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = false;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = false;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = false;
 
             PhotonNetwork.sendRate = 30;
             PhotonNetwork.sendRateOnSerialize = 30;
             PhotonNetwork.automaticallySyncScene = true;
         }
-
-
 
         private void Update()
         {
@@ -79,27 +66,25 @@ namespace TAHL.WAVE_BENDER
                 if (!_isConnected)
                 {
                     ChatController.SetUpChat(false);
-                    _joinedRoom = false;
-                    _chatGUI.SetActive(false);
                     
                     // only change these when disconnected
-                    _networkButtons[(int)Globals.NetworkButtonsEnum.Host].interactable = false;
-                    _networkButtons[(int)Globals.NetworkButtonsEnum.Join].interactable = false;
+                    _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = false;
+                    _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = false;
                 }
 
-                _networkInputs[(int)Globals.NetworkInputsEnum.PlayerName].interactable = _isConnected;
-                _networkInputs[(int)Globals.NetworkInputsEnum.RoomName].interactable = _isConnected;
-                _networkInputs[(int)Globals.NetworkInputsEnum.CloudRegion].interactable = !_isConnected;
-                _networkInputs[(int)Globals.NetworkInputsEnum.ChatRegion].interactable = !_isConnected;
+                _networkInputs[(int)Globals.Enums.NetworkInputs.PlayerName].interactable = _isConnected;
+                _networkInputs[(int)Globals.Enums.NetworkInputs.RoomName].interactable = _isConnected;
+                _networkInputs[(int)Globals.Enums.NetworkInputs.CloudRegion].interactable = !_isConnected;
+                _networkInputs[(int)Globals.Enums.NetworkInputs.ChatRegion].interactable = !_isConnected;
 
-                _networkButtons[(int)Globals.NetworkButtonsEnum.Connect].interactable = !_isConnected;
-                _networkButtons[(int)Globals.NetworkButtonsEnum.Disconnect].interactable = _isConnected;
-                _networkButtons[(int)Globals.NetworkButtonsEnum.StartGame].interactable = false;
+                _networkButtons[(int)Globals.Enums.NetworkButtons.Connect].interactable = !_isConnected;
+                _networkButtons[(int)Globals.Enums.NetworkButtons.Disconnect].interactable = _isConnected;
+                _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = false;
 
             }
 
-            _networkTexts[(int)Globals.NetworkTextEnum.NetworkState].text = PhotonNetwork.connectionState.ToString() + ". " + _networkState;
-            _networkTexts[(int)Globals.NetworkTextEnum.ErrorState].text = _errorState;
+            _networkTexts[(int)Globals.Enums.NetworkTexts.NetworkState].text = PhotonNetwork.connectionState.ToString() + ". " + _networkState;
+            _networkTexts[(int)Globals.Enums.NetworkTexts.ErrorState].text = _errorState;
         }
 
         /// <summary>
@@ -195,8 +180,8 @@ namespace TAHL.WAVE_BENDER
             _errorState = string.Empty;
             _networkState = "Joined in lobby";
 
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Host].interactable = true;
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Join].interactable = true;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = true;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = true;
         }
 
         public override void OnJoinedRoom()
@@ -208,7 +193,6 @@ namespace TAHL.WAVE_BENDER
                 return;
             }
 
-            _chatGUI.SetActive(true);
             ChatController.SetUpChat(true);
 
             _errorState = string.Empty;
@@ -219,17 +203,18 @@ namespace TAHL.WAVE_BENDER
                 networkInput.interactable = false;
             }
 
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Host].interactable = false;
-            _networkButtons[(int)Globals.NetworkButtonsEnum.Join].interactable = false;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = false;
+            _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = false;
 
-            _networkTexts[(int)Globals.NetworkTextEnum.RequiredToConnect].gameObject.SetActive(true);
-            _networkTexts[(int)Globals.NetworkTextEnum.CurrentlyConnected].text = "Currently Connected: " + PhotonNetwork.playerList.Length;
+            _networkTexts[(int)Globals.Enums.NetworkTexts.RequiredToConnect].gameObject
+                .SetActive(true);
+            _networkTexts[(int)Globals.Enums.NetworkTexts.CurrentlyConnected].text = 
+                "Currently Connected: " + PhotonNetwork.playerList.Length;
 
             if (PhotonNetwork.isMasterClient)
             {
-                _networkButtons[(int)Globals.NetworkButtonsEnum.StartGame].interactable = true;
+                _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = true;
             }
-            _joinedRoom = true;
         }
 
         #endregion
@@ -297,9 +282,9 @@ namespace TAHL.WAVE_BENDER
 
         public void StartGame()
         {
-            if (PhotonNetwork.playerList.Length > 1)
+            if (PhotonNetwork.playerList.Length == 1)
             {
-                PhotonNetwork.LoadLevel((int)Globals.SceneIndex.Game);
+                PhotonNetwork.LoadLevel((int)Globals.Enums.SceneIndex.Game);
             }
             else
             {
@@ -310,7 +295,7 @@ namespace TAHL.WAVE_BENDER
         public void Return()
         {
             PhotonNetwork.Disconnect();
-            SceneManager.LoadScene((int)Globals.SceneIndex.MainMenu);
+            SceneManager.LoadScene((int)Globals.Enums.SceneIndex.MainMenu);
         }
 
         public void Exit()

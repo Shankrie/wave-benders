@@ -1,9 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using UnityEngine;
+using Photon;
 
 namespace TAHL.WAVE_BENDER
 {
-    public class KeyController : MonoBehaviour
+    public class KeyController : PunBehaviour
     {
         public Vector3 GetStartPosition { get { return _startPosition; } }
         /// <summary>
@@ -37,7 +38,6 @@ namespace TAHL.WAVE_BENDER
         private GameObject[] _players = null;
 
         private KeyGenerator _keyGen;
-        private CountDown _countDown;
         private WaveMover _waveMover;
         private GameController _gameController;
         private DeathController _deathController;
@@ -45,10 +45,11 @@ namespace TAHL.WAVE_BENDER
 
         private Vector3 _startPosition = Vector3.zero;
 
+        private string loseCause = string.Empty;
+
         private int _keyCount = 0;
 
         private bool _waveFlooded = false;
-        private bool _waveForceFlood = false;
 
         void Awake()
         {
@@ -57,7 +58,6 @@ namespace TAHL.WAVE_BENDER
             GameObject gameControllObject = GameObject.FindGameObjectWithTag(Globals.Tags.GameController);
 
             _keyGen = keyGenObject.GetComponent<KeyGenerator>();
-            _countDown = keyGenObject.GetComponent<CountDown>();
             _waveMover = waveObject.GetComponent<WaveMover>();
             _gameController = gameControllObject.GetComponent<GameController>();
 
@@ -65,28 +65,12 @@ namespace TAHL.WAVE_BENDER
             _pw = GetComponent<PhotonView>();
 
             _startPosition = transform.position;
-
-            // setting keygen and countdown movement script when player controls view
-            if (_pw.isMine)
-            {
-                _countDown.SetKeyController = this;
-                if (!PhotonNetwork.isMasterClient)
-                {
-                    StartCountDownCall();
-                }
-            }
-            else
-            {
-                // Disable box collider when to avoid unnecessary collision
-                BoxCollider2D collider = GetComponent<BoxCollider2D>();
-                collider.enabled = false;
-            }
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (!_pw.isMine || _waveFlooded || _waveForceFlood || Progress >= _keyCount)
+            if (!_pw.isMine || _waveFlooded || Progress >= _keyCount)
                 return;
 
             if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9]$").Success)
@@ -104,18 +88,16 @@ namespace TAHL.WAVE_BENDER
 
         private void OnGUI()
         {
-            //string keys = "";
-            //if (_pw.isMine)
-            //{
-            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "Master: " + MyTurn.ToString());
-            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "View Mine: " + keys);
-            //}
-            //else
-            //{
-            //    GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "Master: " + MyTurn.ToString());
- 
-            //    GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "View Mine: " + keys);
-            //}
+            if (_pw.isMine)
+            {
+                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "My Turn: " + MyTurn.ToString());
+                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "My name: " + gameObject.name);
+            }
+            else
+            {
+                GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "My Turn: " + MyTurn.ToString());
+                GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "My name: " + gameObject.name);
+            }
         }
 
 
@@ -144,6 +126,7 @@ namespace TAHL.WAVE_BENDER
             // Move the wave faster to player and don't let player to do anything
             else if (Regex.Match(Input.inputString.ToLower(), "[a-z0-9]").Success)
             {
+                loseCause = "Wrong key pressed!";
                 _pw.RPC("ForceFloodWaveRPC", PhotonTargets.All);
             }
         }
@@ -163,17 +146,14 @@ namespace TAHL.WAVE_BENDER
                 }
             }
         }
-
-
-
+      
         /// <summary>
         /// Starts countdown localy
         /// </summary>
         public void StartCountDown()
         {
-            _countDown.StartCountDown();
+            _gameController.StartCountDown();
         }
-
 
         /// <summary>
         /// Calls RPC foreach Client to start countdownn
@@ -198,7 +178,7 @@ namespace TAHL.WAVE_BENDER
         [PunRPC]
         public void StartCountDownRPC()
         {
-            _countDown.StartCountDown();
+            _gameController.StartCountDown();
         }
 
         [PunRPC]
@@ -262,7 +242,7 @@ namespace TAHL.WAVE_BENDER
 
             // call wave component to turn to other side
             _waveMover.transform.position = wavePosition;
-            _waveMover.deflectWave();
+            _waveMover.DeflectWave();
         }
 
         [PunRPC]
@@ -274,7 +254,6 @@ namespace TAHL.WAVE_BENDER
         [PunRPC]
         public void ForceFloodWaveRPC()
         {
-            _waveForceFlood = true;
             _waveMover.IncreaseSpeed();
             _keyGen.DestroySpawnedKeys();
         }
@@ -289,7 +268,6 @@ namespace TAHL.WAVE_BENDER
             _waveFlooded = true;
             _keyGen.DestroySpawnedKeys();
 
-            string loseCause = _waveForceFlood ? "Wrong key pressed" : string.Empty;
             // this gameobject turn and it controls view
             if (MyTurn)
             {
@@ -319,9 +297,9 @@ namespace TAHL.WAVE_BENDER
             _waveMover.ResetWave();
             _waveMover.enabled = false;
             _waveFlooded = false;
-            _waveForceFlood = false;
 
             _keyGen.DestroySpawnedKeys();
+            loseCause = string.Empty;
 
             _gameController.EnableGameEndGUI(false);
             StartCountDown();
