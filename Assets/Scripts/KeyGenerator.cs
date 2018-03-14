@@ -4,16 +4,13 @@ using UnityEngine;
 
 namespace TAHL.WAVE_BENDER
 {
-    [RequireComponent(typeof(CountDown))]
     public class KeyGenerator : MonoBehaviour
     {
         public List<Key> spawnedKeys = new List<Key>();
         public Transform KeysPosition;
-        public Texture2D txt;
         public int Level { get { return _level; } set { _level = value; } }
 
         private Sprite[] _sprites;
-        private CountDown _countDown = null;
 
         private int _level = 0;
         private bool _initialized = false;

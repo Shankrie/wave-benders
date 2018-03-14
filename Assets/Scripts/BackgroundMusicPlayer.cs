@@ -16,11 +16,6 @@ namespace TAHL.WAVE_BENDER
             // if (gameObject.name == "Penguin") PlayPenguinBattleCry();
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
         void PlayBackgroundTheme()
         {
             AudioSource audioSource = gameObject.AddComponent<AudioSource>();

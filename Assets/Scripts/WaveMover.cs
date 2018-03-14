@@ -124,7 +124,7 @@ namespace TAHL.WAVE_BENDER
             audioSource.Play();
         }
 
-        public bool deflectWave()
+        public bool DeflectWave()
         {
             // Recalulacting journey length with current position
             _startPosition = transform.position;

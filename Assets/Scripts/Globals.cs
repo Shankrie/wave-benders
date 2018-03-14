@@ -1,80 +1,121 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TAHL.WAVE_BENDER
-{
+{ 
     public static class Globals
     {
-        public static bool MyTurn = false;
-
-        public enum SceneIndex
+        public static partial class Names
         {
-            MainMenu = 0,
-            Credits = 1,
-            Lobby = 2,
-            Game = 3
+            public static string[] PlayerPrefs = new string[] {
+                Globals.PUNKeys.playerName,
+                Globals.PUNKeys.gameRoomName,
+                Globals.PUNKeys.cloudRegion,
+                Globals.PUNKeys.chatRegion
+            };
+
+            public static string[] NetworkButtons = new string[] {
+                "Connect",
+                "Disconnect",
+                "Host",
+                "Join",
+                "StartGame",
+                "Return",
+                "Exit"
+            };
+
+            public static string[] NetworkInputs = new string[] {
+                "PlayerName",
+                "RoomName",
+                "CloudRegion",
+                "ChatRegion"
+            };
+
+            public static string[] NetworkTexts= new string[] {
+                "RequiredToConnect",
+                "CurrentlyConnected",
+                "NetworkState",
+                "ErrorState"
+            };
+
+
+            public static string[] CountDowns = new string[]
+            {
+                "WaitingForPlayer",
+                "3",
+                "2",
+                "1",
+                "Start"
+            };
         }
 
-        public enum PlayerPrefFlags
+        public static class Enums
         {
-            PlayerName,
-            GameRoomName,
-            CloudRegion,
-            ChatRegion
+            public enum SceneIndex
+            {
+                MainMenu = 0,
+                Credits = 1,
+                Lobby = 2,
+                Game = 3
+            }
+
+            public enum PlayerPrefFlags
+            {
+                PlayerName,
+                GameRoomName,
+                CloudRegion,
+                ChatRegion
+            }
+
+            public enum NetworkButtons
+            {
+                Connect,
+                Disconnect,
+                Host,
+                Join,
+                StartGame,
+                Return,
+                Exit
+            }
+
+            public enum NetworkInputs
+            {
+                PlayerName,
+                RoomName,
+                CloudRegion,
+                ChatRegion
+            }
+
+            public enum NetworkTexts
+            {
+                RequiredToConnect,
+                CurrentlyConnected,
+                NetworkState,
+                ErrorState
+            }
+
+            public enum ChatRegionCode
+            {
+                asia,
+                eu,
+                us
+            }
+
+            public enum RegionType
+            {
+                Cloud,
+                Chat
+            }
         }
 
-        public enum NetworkButtonsEnum
-        {
-            Connect,
-            Disconnect,
-            Host,
-            Join,
-            StartGame,
-            Return,
-            Exit
-        }
-
-        public enum NetworkInputsEnum
-        {
-            PlayerName,
-            RoomName,
-            CloudRegion,
-            ChatRegion
-        }
-
-        public enum NetworkTextEnum
-        {
-            RequiredToConnect,
-            CurrentlyConnected,
-            NetworkState,
-            ErrorState
-        }
-
-        public static string[] PlayerPrefs = new string[] {
-            Globals.PUNKeys.playerName,
-            Globals.PUNKeys.gameRoomName,
-            Globals.PUNKeys.cloudRegion,
-            Globals.PUNKeys.chatRegion
-        };
-
-        public enum ChatRegionCode
-        {
-            asia,
-            eu,
-            us
-        }
-
-        public enum RegionType
-        {
-            Cloud,
-            Chat
-        }
 
         public static string PUNVersion = "1.0";
 
         public static partial class PUNAppIds
         {
             public const string chat = "29f6c1e9-d555-43c0-bbf7-ce05ad05cbbf";
+            public const string network = "24d3a1f4-57b0-46d1-8e62-a96a1aa64df8";
         }
 
         public static partial class PUNKeys
@@ -93,7 +134,6 @@ namespace TAHL.WAVE_BENDER
             public const string KeyGen = "KeyGen";
             public const string Player = "Player";
             public const string Wave = "Wave";
-            public const string CountDown = "CountDown";
             public const string GameController = "GameController";
             public const string NetworkManager = "NetworkManager";
             public const string NetworkInputs = "NetworkInputs";
@@ -101,6 +141,8 @@ namespace TAHL.WAVE_BENDER
             public const string NetworkTexts = "NetworkTexts";
             public const string ChatContent = "ChatContent";
             public const string GUIBackground = "GUIBackground";
+            public const string CountDownObjs = "CountDownObjs";
+
         }
 
         public static partial class Defaults
@@ -123,7 +165,7 @@ namespace TAHL.WAVE_BENDER
         {
             public static int[] DifficultyLevels = new int[]
             {
-            3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 9, 9
+                3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 9, 9
             };
 
             public const int MAX_DIFF_LEVEL = 7;
@@ -137,7 +179,7 @@ namespace TAHL.WAVE_BENDER
 
         public static Color[] InactiveColorsByTurn = new Color[]
         {
-            new Color(0.5f, 0.5f, 0.5f, 1),
+            Color.black,
             new Color(1, 1, 0.3f, 1)
         };
 
@@ -176,5 +218,60 @@ namespace TAHL.WAVE_BENDER
             {24, KeyCode.N },
             {25, KeyCode.M }
         };
+
+        public static partial class Methods
+        {
+            /// <typeparam name="T"></typeparam>
+            /// <param name="UIComponents">Array with fixed length</param>
+            /// <param name="names">names for gameobject to check</param>
+            /// <param name="tag">tag </param>
+            public static void SetupUI<T>(ref T[] UIComponents, string[] names, string tag)
+            {
+                GameObject[] UIObjects = GameObject.FindGameObjectsWithTag(tag);
+                UIComponents = new T[UIObjects.Length];
+                for (int i = 0; i < UIObjects.Length; i++)
+                {
+                    UIComponents[i] = UIObjects[i].GetComponent<T>();
+                }
+
+                SortByName<T>(UIObjects, names, UIComponents);
+            }
+
+            /// <summary>
+            /// Setup GameObjects getting by tags and sorting by names
+            /// </summary>
+            public static void SetupGOs(ref GameObject[] GameObjects, string[] names, string tag)
+            {
+                GameObjects = GameObject.FindGameObjectsWithTag(tag);
+                SortByName<GameObject>(GameObjects, names);
+            }
+
+            public static void SortByName<T>(GameObject[] sortedObjects, string[] names, T[] additionalObjects = null)
+            {
+                // Sort by names
+                for (int i = 0; i < sortedObjects.Length - 1; i++)
+                {
+                    int j = i;
+                    while (sortedObjects[i].name != names[i])
+                    {
+                        j++;
+                        if (sortedObjects.Length <= j)
+                        {
+                            throw new Exception("Cannot find name " + names[i]);
+                        }
+                        Swap(sortedObjects, i, j);
+                        if (additionalObjects != null)
+                            Swap(additionalObjects, i, j);
+                    }
+                }
+            }
+
+            public static void Swap<T>(T[] objects, int i, int j)
+            {
+                T temp = objects[i];
+                objects[i] = objects[j];
+                objects[j] = temp;
+            }
+        }
     }
 }

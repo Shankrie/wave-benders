@@ -9,13 +9,13 @@ namespace TAHL.WAVE_BENDER
     [RequireComponent(typeof(Dropdown))]
     public class RegionField: MonoBehaviour
     {
-        public Globals.RegionType regionType = 0;
+        public Globals.Enums.RegionType regionType = 0;
         
         private Dropdown _regionDropdown;
 
         private int _selectedIndex = 0;
 
-        private Type[] regionTypes = new Type[] { typeof(CloudRegionCode), typeof(Globals.ChatRegionCode) };
+        private Type[] regionTypes = new Type[] { typeof(CloudRegionCode), typeof(Globals.Enums.ChatRegionCode) };
 
         private void Awake()
         {

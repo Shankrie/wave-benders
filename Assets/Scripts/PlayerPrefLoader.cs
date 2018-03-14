@@ -11,7 +11,7 @@ namespace TAHL.WAVE_BENDER
 
         #region Public Variables
 
-        public Globals.PlayerPrefFlags playerPrefFlag;
+        public Globals.Enums.PlayerPrefFlags playerPrefFlag;
 
         #endregion public
 
@@ -26,17 +26,17 @@ namespace TAHL.WAVE_BENDER
         {
             switch ((int)playerPrefFlag)
             {
-                case (int)Globals.PlayerPrefFlags.PlayerName:
+                case (int)Globals.Enums.PlayerPrefFlags.PlayerName:
                     string name = SetPrefFromText(SetPlayerName);
                     SetupPlayerName(name);
                     break;
-                case (int)Globals.PlayerPrefFlags.GameRoomName:
+                case (int)Globals.Enums.PlayerPrefFlags.GameRoomName:
                     SetPrefFromText(SetGameRoomName);
                     break;
-                case (int)Globals.PlayerPrefFlags.CloudRegion:
+                case (int)Globals.Enums.PlayerPrefFlags.CloudRegion:
                     SetPrefFromDropdown();
                     break;
-                case (int)Globals.PlayerPrefFlags.ChatRegion:
+                case (int)Globals.Enums.PlayerPrefFlags.ChatRegion:
                     SetPrefFromDropdown();
                     break;
                 default:
@@ -58,11 +58,11 @@ namespace TAHL.WAVE_BENDER
             _inputField.onValueChanged.AddListener(onChange);
 
             // if there's no saved player preference for current flag
-            if (!PlayerPrefs.HasKey(Globals.PlayerPrefs[(int)playerPrefFlag]))
+            if (!PlayerPrefs.HasKey(Globals.Names.PlayerPrefs[(int)playerPrefFlag]))
             {
                 return string.Empty;
             }
-            string defaultName = PlayerPrefs.GetString(Globals.PlayerPrefs[(int)playerPrefFlag]);
+            string defaultName = PlayerPrefs.GetString(Globals.Names.PlayerPrefs[(int)playerPrefFlag]);
             _inputField.text = defaultName;
             return defaultName;
         }
@@ -73,12 +73,12 @@ namespace TAHL.WAVE_BENDER
             _dropdownField.onValueChanged.AddListener(SetRegion);
 
             // if there's no saved player preference then add default
-            if (!PlayerPrefs.HasKey(Globals.PlayerPrefs[(int)playerPrefFlag]))
+            if (!PlayerPrefs.HasKey(Globals.Names.PlayerPrefs[(int)playerPrefFlag]))
             {
                 return;
             }
 
-            int defaultIndex = PlayerPrefs.GetInt(Globals.PlayerPrefs[(int)playerPrefFlag]);
+            int defaultIndex = PlayerPrefs.GetInt(Globals.Names.PlayerPrefs[(int)playerPrefFlag]);
             _dropdownField.value = defaultIndex;
         }
 
@@ -96,17 +96,17 @@ namespace TAHL.WAVE_BENDER
         {
             PhotonNetwork.playerName = _inputField.text;
             PhotonNetwork.player.NickName = _inputField.text;
-            PlayerPrefs.SetString(Globals.PlayerPrefs[(int)playerPrefFlag], _inputField.text);
+            PlayerPrefs.SetString(Globals.Names.PlayerPrefs[(int)playerPrefFlag], _inputField.text);
         }
 
         public void SetGameRoomName(string value)
         {
-            PlayerPrefs.SetString(Globals.PlayerPrefs[(int)playerPrefFlag], _inputField.text);
+            PlayerPrefs.SetString(Globals.Names.PlayerPrefs[(int)playerPrefFlag], _inputField.text);
         }
 
         public void SetRegion(int index)
         {
-            PlayerPrefs.SetInt(Globals.PlayerPrefs[(int)playerPrefFlag], _dropdownField.value);
+            PlayerPrefs.SetInt(Globals.Names.PlayerPrefs[(int)playerPrefFlag], _dropdownField.value);
         }
 
         #endregion
