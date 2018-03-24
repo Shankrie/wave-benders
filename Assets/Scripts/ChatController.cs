@@ -375,7 +375,7 @@ namespace TAHL.WAVE_BENDER
         public void OnApplicationQuit()
         {
             if (_chatClient != null) _chatClient.Disconnect();
-            StopAllCoroutines();
+            PhotonNetwork.Disconnect();
         }
     }
 }

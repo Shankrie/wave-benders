@@ -1,11 +1,14 @@
 ﻿using System.Text.RegularExpressions;
 using UnityEngine;
 using Photon;
+using UnityEngine.UI;
 
 namespace TAHL.WAVE_BENDER
 {
     public class KeyController : PunBehaviour
     {
+        public Text currentTurn;
+
         public Vector3 GetStartPosition { get { return _startPosition; } }
         /// <summary>
         ///     Is player on right or left direction(1, -1);
@@ -24,11 +27,6 @@ namespace TAHL.WAVE_BENDER
         /// Checks if it's player turn to input keys before wave crash on him or her.
         /// </summary>
         public bool MyTurn = false;
-
-        /// <summary>
-        /// Return true if player controls pohoton view
-        /// </summary>
-        public bool ControlsView { get { return _pw.isMine; } }
 
         public KeyController[] SetKeyControllers { set { _playersKeyController = value; } }
         public GameObject[] SetPlayers { set { _players = value; } }
@@ -49,7 +47,11 @@ namespace TAHL.WAVE_BENDER
 
         private int _keyCount = 0;
 
-        private bool _waveFlooded = false;
+        private bool _waveFlooded = false;        
+        /// <summary>
+        /// Return true if player controls pohoton view
+        /// </summary>
+        private bool _controlsView { get; set; } 
 
         void Awake()
         {
@@ -65,30 +67,25 @@ namespace TAHL.WAVE_BENDER
             _pw = GetComponent<PhotonView>();
 
             _startPosition = transform.position;
+
+            currentTurn.enabled = false;
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (!_pw.isMine || _waveFlooded || Progress >= _keyCount)
+            if (!_controlsView || _waveFlooded || Progress >= _keyCount)
                 return;
 
-            if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9]$").Success)
+            if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9 ]$").Success && MyTurn)
             {
-                if (!MyTurn)
-                {
-                    RaiseWaveKeyPressed();
-                }
-                else
-                {
-                    DeflectWaveKeyPressed();
-                }
+                DeflectWaveKeyPressed();
             }
         }
 
         private void OnGUI()
         {
-            if (_pw.isMine)
+            if (_controlsView)
             {
                 GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "My Turn: " + MyTurn.ToString());
                 GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "My name: " + gameObject.name);
@@ -124,7 +121,7 @@ namespace TAHL.WAVE_BENDER
                 }
             }
             // Move the wave faster to player and don't let player to do anything
-            else if (Regex.Match(Input.inputString.ToLower(), "[a-z0-9]").Success)
+            else if (Regex.Match(Input.inputString.ToLower(), "[a-zA-Z0-9 ]").Success)
             {
                 loseCause = "Wrong key pressed!";
                 _pw.RPC("ForceFloodWaveRPC", PhotonTargets.All);
@@ -192,7 +189,6 @@ namespace TAHL.WAVE_BENDER
             // get new keys for client
             int[] keys = _keyGen.GetRandomKeys();
 
-
             _playersKeyController = gameObject.GetComponentsByTag<KeyController>(Globals.Tags.Player);
             if(_players == null)
             {
@@ -201,21 +197,26 @@ namespace TAHL.WAVE_BENDER
             foreach(GameObject go in _players)
             {
                 KeyController controller = go.GetComponent<KeyController>();
-                controller.MyTurn = controller.ControlsView == PhotonNetwork.isMasterClient;
+                controller.SetControllingView() ;
+                controller.MyTurn = controller._controlsView == PhotonNetwork.isMasterClient;
                 controller.PlayerDirection = controller.MyTurn ? 1 : -1;
                 controller.Progress = 0;
-                controller.SetKeyCount = Globals.Difficulty.DifficultyLevels[_keyGen.Level];
+                controller.SetKeyCount = keys.Length;
                 controller.SetPlayers = _players;
 
-                if (controller.ControlsView)
+                if (controller._controlsView)
                 {
                     _keyGen.PaintKeys(keys, controller.MyTurn);
+                    gameObject.GetComponent<BoxCollider2D>().enabled = true;
                 }
                 if (!GameObject.ReferenceEquals(go, gameObject))
                 {
                     go.GetComponent<KeyController>().SetKeyControllers = _playersKeyController;
                 }
             }
+
+            currentTurn.enabled = true;
+            currentTurn.text = MyTurn ? "My Turn" : "Opponent turn";
 
             _waveMover.enabled = true;
             _waveMover.gameObject.SetActive(true);
@@ -234,11 +235,13 @@ namespace TAHL.WAVE_BENDER
                 controller.MyTurn = !controller.MyTurn;
                 controller.Progress = 0;
                 controller.SetKeyCount = Globals.Difficulty.DifficultyLevels[_keyGen.Level];
-                if (controller.ControlsView)
+                if (controller._controlsView)
                 {
                     _keyGen.PaintKeys(keys, controller.MyTurn);
                 }
             }
+            currentTurn.text = MyTurn ? "My Turn" : "Opponent turn";
+
 
             // call wave component to turn to other side
             _waveMover.transform.position = wavePosition;
@@ -307,8 +310,14 @@ namespace TAHL.WAVE_BENDER
             for(int i = 0; i < _players.Length; i++)
             {
                 _players[i].transform.position = _playersKeyController[i].GetStartPosition;
+                _playersKeyController[i].currentTurn.enabled = false;
                 _players[i].transform.rotation = Quaternion.identity;
             }
+        }
+
+        public void SetControllingView()
+        {
+            _controlsView = _pw.owner != null && _pw.owner.ID == PhotonNetwork.player.ID;
         }
     }
 }

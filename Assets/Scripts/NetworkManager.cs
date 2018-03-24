@@ -20,7 +20,6 @@ namespace TAHL.WAVE_BENDER
         private Selectable[] _networkInputs = null;
         private Text[] _networkTexts = null;
 
-
         private string _networkState = string.Empty;
         private string _errorState = string.Empty;
         private string _playerName = string.Empty;
@@ -39,9 +38,9 @@ namespace TAHL.WAVE_BENDER
             if (ChatController == null)
                 throw new Exception("Error. Chat controller not supplied in network manager script");
 
-            SetupUI(ref _networkButtons, Globals.Names.NetworkButtons, Globals.Tags.NetworkButtons);
-            SetupUI(ref _networkInputs, Globals.Names.NetworkInputs, Globals.Tags.NetworkInputs);
-            SetupUI(ref _networkTexts, Globals.Names.NetworkTexts, Globals.Tags.NetworkTexts);
+            Globals.Methods.SetupUI(ref _networkButtons, Globals.Names.NetworkButtons, Globals.Tags.NetworkButtons);
+            Globals.Methods.SetupUI(ref _networkInputs, Globals.Names.NetworkInputs, Globals.Tags.NetworkInputs);
+            Globals.Methods.SetupUI(ref _networkTexts, Globals.Names.NetworkTexts, Globals.Tags.NetworkTexts);
 
             _networkInputs[(int)Globals.Enums.NetworkInputs.PlayerName].interactable = false;
             _networkInputs[(int)Globals.Enums.NetworkInputs.RoomName].interactable = false;
@@ -85,47 +84,6 @@ namespace TAHL.WAVE_BENDER
 
             _networkTexts[(int)Globals.Enums.NetworkTexts.NetworkState].text = PhotonNetwork.connectionState.ToString() + ". " + _networkState;
             _networkTexts[(int)Globals.Enums.NetworkTexts.ErrorState].text = _errorState;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="UIComponents">Array with fixed length</param>
-        /// <param name="names">names for gameobject to check</param>
-        /// <param name="tag">tag </param>
-        private void SetupUI<T>(ref T[] UIComponents, string[] names, string tag)
-        {
-            GameObject[] UIObjects = GameObject.FindGameObjectsWithTag(tag);
-            UIComponents = new T[UIObjects.Length];
-            for (int i = 0; i < UIObjects.Length; i++)
-            {
-                UIComponents[i] = UIObjects[i].GetComponent<T>();
-            }
-
-            // Sort by names
-            for (int i = 0; i < UIObjects.Length - 1; i++)
-            {
-                int j = i;
-                while (UIObjects[i].name != names[i])
-                {
-                    j++;
-                    if (UIObjects.Length <= j)
-                    {
-                        throw new Exception("Cannot find name " + names[i]);
-                    }
-                    Swap<GameObject>(ref UIObjects[i], ref UIObjects[j]);
-                    Swap<T>(ref UIComponents[i], ref UIComponents[j]);
-                }
-            }
-        }
-
-        private void Swap<T>(ref T firstObject, ref T secondObject)
-        {
-            T temp = firstObject;
-            firstObject = secondObject;
-            secondObject = temp;
-
         }
 
         private bool IsReadyToPair()
@@ -235,10 +193,10 @@ namespace TAHL.WAVE_BENDER
             int region = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
             string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
             Array values = Enum.GetValues(typeof(CloudRegionCode));
-            PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
+            // PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
 
             // Use to connect to local server
-            //PhotonNetwork.ConnectToMaster(LocalIp, Port, string.Empty, Globals.PUNVersion);
+            PhotonNetwork.ConnectToMaster(LocalIp, 5055, string.Empty, Globals.PUNVersion);
         }
 
         public void DisconnectFromServer()

@@ -21,6 +21,8 @@ namespace TAHL.WAVE_BENDER
 
         private GameObject _gameEndGUI;
         private GameObject _networkGUI;
+        private const string LocalIp = "127.0.0.1";
+
 
         private float _countDownTime = 0;
         private int _index = 0;
@@ -45,13 +47,15 @@ namespace TAHL.WAVE_BENDER
                 go.SetActive(false);
             }
 
-            if(PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.isMasterClient)
             {
+                MasterClient.SetActive(true);
                 MasterClient.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
                 _mineKeyController = MasterClient.GetComponent<KeyController>();
             }
             else
             {
+                MasterClient.SetActive(true);
                 Client.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
                 _mineKeyController = Client.GetComponent<KeyController>();
             }
@@ -60,6 +64,9 @@ namespace TAHL.WAVE_BENDER
             _gameEndGUI.SetActive(false);
 
             _networkGUI = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkGUI);
+
+            if(Globals.NetworkData.Offline_Mode)
+                OnOwnershipTransfered(null);
         }
 
         // Update is called once per frame
@@ -91,7 +98,7 @@ namespace TAHL.WAVE_BENDER
 
         private void OnGUI()
         {
-            GUI.TextArea(new Rect(0, 0, 100, 100), _mineKeyController.gameObject.name);
+            // GUI.TextArea(new Rect(0, 0, 100, 100), _mineKeyController.gameObject.name);
         }
 
         public void EnableGameEndGUI(bool enable)
@@ -152,11 +159,20 @@ namespace TAHL.WAVE_BENDER
 
         public override void OnOwnershipTransfered(object[] viewAndPlayers)
         {
-            Debug.Log("Test32123");
             if(PhotonNetwork.isMasterClient)
             {
-                // _mineKeyController.StartCountDownCall();
+                Client.SetActive(true);
+                _mineKeyController.StartCountDownCall();
             }
+            else
+            {
+                MasterClient.SetActive(true);
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            PhotonNetwork.Disconnect();
         }
     }
 }
