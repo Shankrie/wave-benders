@@ -27,11 +27,11 @@ namespace TAHL.WAVE_BENDER
         const float MAX_SCALE_Y = 1.0f;
         const float MAX_SPEED = 5.0f;
 
-        void Start()
+        void Awake()
         {
             PlayWaveRising(true);
 
-            transform.localScale = new Vector3(transform.localScale.x, 0.2f, transform.localScale.z);
+            transform.localScale = new Vector3(0.4f, 0.3f, 1);
 
             _time = Time.time;
             _startPosition = transform.position;

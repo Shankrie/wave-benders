@@ -14,8 +14,6 @@ namespace TAHL.WAVE_BENDER
         private float _time;
         private float _speed = 5f;
 
-        private int _direction = 0;
-
         private bool _lost = false;
 
         private void Start()
@@ -36,7 +34,6 @@ namespace TAHL.WAVE_BENDER
         {
             // set parameters to start death "animation".
             _lost = true;
-            _direction = direction;
             _startPoint = transform.position;
             _endPoint = transform.position + new Vector3(3 * direction, 2, 0);
             _distance = Vector3.Distance(_startPoint, _endPoint);

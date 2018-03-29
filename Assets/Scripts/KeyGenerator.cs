@@ -9,11 +9,12 @@ namespace TAHL.WAVE_BENDER
     {
         public List<Key> _spawnedKeys = new List<Key>();
         public Transform KeysPosition;
-        public int Level { get { return _level; } set { _level = value; } }
+        public int Level = 0;
 
         private Sprite[] _sprites;
 
-        private int _level = 0;
+        private string _lastWord = string.Empty;
+
         private const int LINE_KEYS_SPACE = 10;
 
         void Start()
@@ -86,16 +87,21 @@ namespace TAHL.WAVE_BENDER
             _spawnedKeys.Add(new Key(randomKeyObject, currentKey));
         }
 
-        public int[] GetRandomKeys()
+        public int[] GetSwearKeys()
         {
-            System.Random rnd = new System.Random();
+            int numberOfKeys = Globals.Difficulty.DifficultyLevels[Level];
+            if (Level < Globals.Difficulty.MAX_DIFF_LEVEL)
+                Level++;
 
-            int numberOfKeys = Globals.Difficulty.DifficultyLevels[_level];
-            
-            IEnumerable<string> words = Globals.CurseWords.Where(w => w.Length == numberOfKeys);
+            IEnumerable<string> words = Globals.CurseWords.Where(w => w.Length == numberOfKeys && w != _lastWord);
             int wordsCount = words.Count();
-            string word = words.ElementAt(UnityEngine.Random.Range(0, wordsCount - 1));
-            
+            string word = _lastWord;
+            if (wordsCount != 0)
+            {
+                word = words.ElementAt(UnityEngine.Random.Range(0, wordsCount - 1));
+                _lastWord = word;
+            }
+
             int[] keys = new int[word.Length];
             int index = 0;
             foreach(char letter in word)
@@ -131,12 +137,6 @@ namespace TAHL.WAVE_BENDER
             renderer.color = myTurn ?
                 Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.myTurn] :
                 Globals.InactiveColorsByTurn[(int)Globals.ColorTurnIndex.oponnentTurn];
-        }
-
-        public void IncreaseLevel()
-        {
-            if (_level < Globals.Difficulty.MAX_DIFF_LEVEL)
-                _level++;
         }
 
         public void DestroySpawnedKeys()

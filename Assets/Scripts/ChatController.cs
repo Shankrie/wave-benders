@@ -40,8 +40,6 @@ namespace TAHL.WAVE_BENDER
         private string _channelName = null;
         private string _userId = null;
 
-        private float nextServeTime;
-
         private const float dServeTime = 0.1f;
         private const int MAX_MSG_IN_SCREEN = 25;
         private const int OVERFLOW_SIZE = 28;
@@ -94,8 +92,6 @@ namespace TAHL.WAVE_BENDER
             _myImage = GetComponent<Image>();
 
             _myInputField.interactable = false;
-
-            nextServeTime = Time.time;
         }
 
         void Update()

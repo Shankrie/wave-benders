@@ -20,14 +20,14 @@ namespace TAHL.WAVE_BENDER
         public Text LoseCause;
 
         private GameObject _gameEndGUI;
-        private GameObject _networkGUI;
         private const string LocalIp = "127.0.0.1";
 
-
+        private float _readyTime = -1;
         private float _countDownTime = 0;
-        private int _index = 0;
+        private int _index = 1;
 
         private bool _startCountDown = false;
+        private bool _ready = true;
 
         private void Awake()
         {
@@ -46,27 +46,21 @@ namespace TAHL.WAVE_BENDER
             {
                 go.SetActive(false);
             }
+            _countDownObjs[1].SetActive(true);
 
             if (PhotonNetwork.isMasterClient)
             {
-                MasterClient.SetActive(true);
                 MasterClient.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
                 _mineKeyController = MasterClient.GetComponent<KeyController>();
             }
             else
             {
-                MasterClient.SetActive(true);
                 Client.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
                 _mineKeyController = Client.GetComponent<KeyController>();
             }
 
             _gameEndGUI = GameObject.FindGameObjectWithTag(Globals.Tags.GameEndGUI);
             _gameEndGUI.SetActive(false);
-
-            _networkGUI = GameObject.FindGameObjectWithTag(Globals.Tags.NetworkGUI);
-
-            if(Globals.NetworkData.Offline_Mode)
-                OnOwnershipTransfered(null);
         }
 
         // Update is called once per frame
@@ -76,6 +70,21 @@ namespace TAHL.WAVE_BENDER
             {
                 _gameEndGUI.SetActive(!_gameEndGUI.activeSelf);
             }
+
+            // Get player ready
+            if (!_ready)
+            {
+                if (_readyTime > 0)
+                {
+                    _readyTime -= Time.deltaTime;
+                    return;
+                }
+                _countDownObjs[0].SetActive(false);
+                _countDownObjs[_index++].SetActive(false);
+                _countDownObjs[_index].SetActive(true);
+                _ready = true;
+            }
+
             if (_startCountDown && _countDownTime - 0.01 > Globals.Delays.COUNT_DOWN)
             {
                 _countDownObjs[_index++].SetActive(false);
@@ -130,6 +139,16 @@ namespace TAHL.WAVE_BENDER
         {
             try
             {
+                if (PhotonNetwork.playerList.Length == 1)
+                    throw new Exception("Error. Other player left");
+
+                foreach (GameObject go in _countDownObjs)
+                {
+                    go.SetActive(false);
+                }
+                _startCountDown = false;
+                _ready = true;
+
                 if (_mineKeyController == null)
                 {
                     throw new Exception("Error. Mine key controller is not defined");
@@ -148,26 +167,29 @@ namespace TAHL.WAVE_BENDER
             SceneManager.LoadScene((int)Globals.Enums.SceneIndex.Lobby);
         }
 
-        public void StartCountDown()
+        public void StartCountDown(bool restarting = false)
         {
-            _countDownObjs[0].SetActive(false);
-            _index = 0;
-            _countDownTime = 0;
+            _index = 1;
+            _countDownTime = 0f;
             _startCountDown = true;
-            _countDownObjs[_index].SetActive(true);
+
+
+            if (restarting)
+            {
+                _countDownObjs[0].SetActive(true);
+                _readyTime = 3f;
+                _ready = false;
+            }
+            else
+            {
+                _countDownObjs[_index].SetActive(true);
+            }
         }
 
         public override void OnOwnershipTransfered(object[] viewAndPlayers)
         {
-            if(PhotonNetwork.isMasterClient)
-            {
-                Client.SetActive(true);
-                _mineKeyController.StartCountDownCall();
-            }
-            else
-            {
-                MasterClient.SetActive(true);
-            }
+            Client.SetActive(true);
+            MasterClient.SetActive(true);
         }
 
         private void OnApplicationQuit()

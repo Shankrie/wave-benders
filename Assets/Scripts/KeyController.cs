@@ -9,45 +9,33 @@ namespace TAHL.WAVE_BENDER
     {
         public Text currentTurn;
 
-        public Vector3 GetStartPosition { get { return _startPosition; } }
-        /// <summary>
-        ///     Is player on right or left direction(1, -1);
-        /// </summary>
-        /// <Default>
-        ///     Player is on right side
-        /// </Default>
-        public int PlayerDirection = 1;
-        /// <summary>
-        /// Key input progress
-        /// </summary>
-        public int Progress = 0;
-
-        public int SetKeyCount { set { _keyCount = value; } }
-        /// <summary>
-        /// Checks if it's player turn to input keys before wave crash on him or her.
-        /// </summary>
-        public bool MyTurn = false;
-
-        public KeyController[] SetKeyControllers { set { _playersKeyController = value; } }
-        public GameObject[] SetPlayers { set { _players = value; } }
+        public Vector3 StartPosition;
 
 
-        private KeyController[] _playersKeyController = null;
+        private KeyController[] _playersKeyControllers = null;
         private GameObject[] _players = null;
 
         private KeyGenerator _keyGen;
         private WaveMover _waveMover;
         private GameController _gameController;
+
+        private Animator _animator;
         private DeathController _deathController;
         private PhotonView _pw;
 
-        private Vector3 _startPosition = Vector3.zero;
+        private string _loseCause = string.Empty;
+        private string _animationName = string.Empty;
 
-        private string loseCause = string.Empty;
+        private int _keyCount = 0;        
+        /// <summary>
+        ///     Is player on right or left direction(1, -1);
+        /// </summary>
+        public int _playerDirection = 1;
+        public int _progress = 0;
 
-        private int _keyCount = 0;
+        private bool _waveFlooded = false;
+        private bool _myTurn = false;
 
-        private bool _waveFlooded = false;        
         /// <summary>
         /// Return true if player controls pohoton view
         /// </summary>
@@ -63,39 +51,43 @@ namespace TAHL.WAVE_BENDER
             _waveMover = waveObject.GetComponent<WaveMover>();
             _gameController = gameControllObject.GetComponent<GameController>();
 
+            _animator = GetComponent<Animator>();
             _deathController = GetComponent<DeathController>();
             _pw = GetComponent<PhotonView>();
 
-            _startPosition = transform.position;
-
             currentTurn.enabled = false;
+            StartPosition = transform.position;
+
+            if (!PhotonNetwork.isMasterClient)
+                _gameController.StartCountDown();
+
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (!_controlsView || _waveFlooded || Progress >= _keyCount)
+            if (!_controlsView || _waveFlooded || _progress >= _keyCount)
                 return;
 
-            if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9 ]$").Success && MyTurn)
+            if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9 ]$").Success && _myTurn)
             {
                 DeflectWaveKeyPressed();
             }
         }
 
-        private void OnGUI()
-        {
-            if (_controlsView)
-            {
-                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "My Turn: " + MyTurn.ToString());
-                GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "My name: " + gameObject.name);
-            }
-            else
-            {
-                GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "My Turn: " + MyTurn.ToString());
-                GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "My name: " + gameObject.name);
-            }
-        }
+        //private void OnGUI()
+        //{
+            //if (_controlsView)
+            //{
+            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.3f), 0, 100, 50), "My Turn: " + _myTurn.ToString());
+            //    GUI.TextArea(new Rect(Screen.width - (Screen.width * 0.1f), 0, 100, 50), "My name: " + gameObject.name);
+            //}
+            //else
+            //{
+            //    GUI.TextArea(new Rect(Screen.width * 0, 0, 100, 50), "My Turn: " + _myTurn.ToString());
+            //    GUI.TextArea(new Rect(Screen.width * 0.2f, 0, 100, 50), "My name: " + gameObject.name);
+            //}
+        //}
 
 
         void OnTriggerEnter2D(Collider2D collider)
@@ -109,21 +101,21 @@ namespace TAHL.WAVE_BENDER
         private void DeflectWaveKeyPressed()
         {
             // When it's your turn you must finish 
-            if (_keyGen.IsKeySpawnedKey(Input.inputString.ToLower(), Progress))
+            if (_keyGen.IsKeySpawnedKey(Input.inputString.ToLower(), _progress))
             {
-                _keyGen.GrayOutKey(MyTurn, Progress);
-                Progress++;
+                _keyGen.GrayOutKey(_myTurn, _progress);
+                _progress++;
 
                 // Flip the wave if progessed current level
-                if (Progress == _keyCount)
+                if (_progress == _keyCount)
                 {
-                    _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _waveMover.transform.position);
+                    _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _keyGen.GetSwearKeys(), _waveMover.transform.position);
                 }
             }
             // Move the wave faster to player and don't let player to do anything
             else if (Regex.Match(Input.inputString.ToLower(), "[a-zA-Z0-9 ]").Success)
             {
-                loseCause = "Wrong key pressed!";
+                _loseCause = "Wrong key pressed!";
                 _pw.RPC("ForceFloodWaveRPC", PhotonTargets.All);
             }
         }
@@ -131,12 +123,12 @@ namespace TAHL.WAVE_BENDER
         private void RaiseWaveKeyPressed()
         {
             // When it's not yuor turn you can increase wave speeed 
-            if (_keyGen.IsKeySpawnedKey(Input.inputString.ToLower(), Progress))
+            if (_keyGen.IsKeySpawnedKey(Input.inputString.ToLower(), _progress))
             {
-                _keyGen.GrayOutKey(MyTurn, Progress);
-                Progress++;
+                _keyGen.GrayOutKey(_myTurn, _progress);
+                _progress++;
 
-                if (Progress == _keyCount)
+                if (_progress == _keyCount)
                 {
                     _pw.RPC("IncreaseWaveSpeedRPC", PhotonTargets.All);
 
@@ -144,14 +136,6 @@ namespace TAHL.WAVE_BENDER
             }
         }
       
-        /// <summary>
-        /// Starts countdown localy
-        /// </summary>
-        public void StartCountDown()
-        {
-            _gameController.StartCountDown();
-        }
-
         /// <summary>
         /// Calls RPC foreach Client to start countdownn
         /// </summary>
@@ -164,7 +148,7 @@ namespace TAHL.WAVE_BENDER
         public void InitializeCall()
         {
             if (PhotonNetwork.isMasterClient)
-                _pw.RPC("InitializingRPC", PhotonTargets.All);
+                _pw.RPC("InitializingRPC", PhotonTargets.All, _keyGen.GetSwearKeys());
         }
 
         public void ResetLevelCall()
@@ -179,73 +163,86 @@ namespace TAHL.WAVE_BENDER
         }
 
         [PunRPC]
-        public void InitializingRPC()
+        public void InitializingRPC(int[] keys)
         {
             // Reset level and destroy leftovers if exist
             _keyGen.Level = 0;
             _keyGen.DestroySpawnedKeys();
 
-
-            // get new keys for client
-            int[] keys = _keyGen.GetRandomKeys();
-
-            _playersKeyController = gameObject.GetComponentsByTag<KeyController>(Globals.Tags.Player);
-            if(_players == null)
+            _playersKeyControllers = gameObject.GetComponentsByTag<KeyController>(Globals.Tags.Player);
+            GameObject[] players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
+            foreach(GameObject go in players)
             {
-                _players = GameObject.FindGameObjectsWithTag(Globals.Tags.Player);
-            }
-            foreach(GameObject go in _players)
-            {
-                KeyController controller = go.GetComponent<KeyController>();
-                controller.SetControllingView() ;
-                controller.MyTurn = controller._controlsView == PhotonNetwork.isMasterClient;
-                controller.PlayerDirection = controller.MyTurn ? 1 : -1;
-                controller.Progress = 0;
-                controller.SetKeyCount = keys.Length;
-                controller.SetPlayers = _players;
-
-                if (controller._controlsView)
-                {
-                    _keyGen.PaintKeys(keys, controller.MyTurn);
-                    gameObject.GetComponent<BoxCollider2D>().enabled = true;
-                }
-                if (!GameObject.ReferenceEquals(go, gameObject))
-                {
-                    go.GetComponent<KeyController>().SetKeyControllers = _playersKeyController;
-                }
+                go.GetComponent<KeyController>().InitializePlayerController(players, keys);
             }
 
             currentTurn.enabled = true;
-            currentTurn.text = MyTurn ? "My Turn" : "Opponent turn";
+            currentTurn.text = _myTurn ? "My Turn" : "Opponent turn";
 
             _waveMover.enabled = true;
             _waveMover.gameObject.SetActive(true);
         }
 
-        [PunRPC]
-        public void DeflectWaveRPC(Vector3 wavePosition)
+        private void InitializePlayerController(GameObject[] players, int[] keys)
         {
-            _keyGen.IncreaseLevel();
+            SetControllingView();
+
+            _myTurn = _controlsView == PhotonNetwork.isMasterClient;
+
+            _playerDirection = _myTurn ? 1 : -1;
+            _progress = 0;
+            _keyCount = keys.Length;
+            _players = players;
+
+            // Paint keys ant enable box colliders with players who control view
+            if (_controlsView)
+            {
+                _keyGen.PaintKeys(keys, _myTurn);
+                GetComponent<BoxCollider2D>().enabled = true;
+            }
+
+            // Set my turn
+            if (_myTurn)
+            {
+                _playerDirection = 1;
+                _animationName = "Flail";
+            }
+            else
+            {
+                _playerDirection = -1;
+                _animationName = "Clap";
+            }
+        }
+
+        [PunRPC]
+        public void DeflectWaveRPC(int[] keys, Vector3 wavePosition)
+        {
             _keyGen.DestroySpawnedKeys();
 
-            int[] keys = _keyGen.GetRandomKeys();
-
-            foreach (KeyController controller in _playersKeyController)
+            foreach (KeyController controller in _playersKeyControllers)
             {
-                controller.MyTurn = !controller.MyTurn;
-                controller.Progress = 0;
-                controller.SetKeyCount = Globals.Difficulty.DifficultyLevels[_keyGen.Level];
-                if (controller._controlsView)
-                {
-                    _keyGen.PaintKeys(keys, controller.MyTurn);
-                }
+                controller.DeflectOnPlayerController(keys);
             }
-            currentTurn.text = MyTurn ? "My Turn" : "Opponent turn";
+            currentTurn.text = _myTurn ? "My Turn" : "Opponent turn";
 
 
             // call wave component to turn to other side
             _waveMover.transform.position = wavePosition;
             _waveMover.DeflectWave();
+        }
+
+        private void DeflectOnPlayerController(int[] keys)
+        {
+            _keyCount = Globals.Difficulty.DifficultyLevels[_keyGen.Level];
+            if(_myTurn)
+                _animator.SetBool(_animationName, true);
+
+            _myTurn = !_myTurn;
+            _progress = 0;
+            if (_controlsView)
+            {
+                _keyGen.PaintKeys(keys, _myTurn);
+            }
         }
 
         [PunRPC]
@@ -272,19 +269,19 @@ namespace TAHL.WAVE_BENDER
             _keyGen.DestroySpawnedKeys();
 
             // this gameobject turn and it controls view
-            if (MyTurn)
+            if (_myTurn)
             {
-                _deathController.playerHaveLost(PlayerDirection);
+                _deathController.playerHaveLost(_playerDirection);
                 _gameController.SetWinner(!_pw.isMine, string.Empty);
             }
             else
             {
-                _gameController.SetWinner(_pw.isMine, loseCause);
+                _gameController.SetWinner(_pw.isMine, _loseCause);
                 foreach (GameObject player in _players)
                 {
-                    if (!GameObject.ReferenceEquals(player, gameObject))
+                    if (!ReferenceEquals(player, gameObject))
                     {
-                        player.GetComponent<DeathController>().playerHaveLost(PlayerDirection);
+                        player.GetComponent<DeathController>().playerHaveLost(_playerDirection);
                         break;
                     }
                 }
@@ -294,7 +291,7 @@ namespace TAHL.WAVE_BENDER
         [PunRPC]
         public void ResetLevelRPC()
         {
-            Progress = 0;
+            _progress = 0;
 
             // Reset wave position scale and facing direction
             _waveMover.ResetWave();
@@ -302,17 +299,21 @@ namespace TAHL.WAVE_BENDER
             _waveFlooded = false;
 
             _keyGen.DestroySpawnedKeys();
-            loseCause = string.Empty;
+            _keyGen.Level = 0;
+            _loseCause = string.Empty;
+
+            if(_playersKeyControllers == null)
+                _playersKeyControllers = gameObject.GetComponentsByTag<KeyController>(Globals.Tags.Player);
+
+            foreach (KeyController controller in _playersKeyControllers)
+            {
+                controller.transform.position = controller.StartPosition;
+                controller.currentTurn.enabled = false;
+                controller.transform.rotation = Quaternion.identity;
+            }
 
             _gameController.EnableGameEndGUI(false);
-            StartCountDown();
-
-            for(int i = 0; i < _players.Length; i++)
-            {
-                _players[i].transform.position = _playersKeyController[i].GetStartPosition;
-                _playersKeyController[i].currentTurn.enabled = false;
-                _players[i].transform.rotation = Quaternion.identity;
-            }
+            _gameController.StartCountDown(true);
         }
 
         public void SetControllingView()

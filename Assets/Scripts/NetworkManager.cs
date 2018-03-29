@@ -130,7 +130,6 @@ namespace TAHL.WAVE_BENDER
 
         #endregion
 
-
         #region Photon inherited methods and events
 
         public override void OnJoinedLobby()
@@ -166,8 +165,6 @@ namespace TAHL.WAVE_BENDER
 
             _networkTexts[(int)Globals.Enums.NetworkTexts.RequiredToConnect].gameObject
                 .SetActive(true);
-            _networkTexts[(int)Globals.Enums.NetworkTexts.CurrentlyConnected].text = 
-                "Currently Connected: " + PhotonNetwork.playerList.Length;
 
             if (PhotonNetwork.isMasterClient)
             {
@@ -176,7 +173,6 @@ namespace TAHL.WAVE_BENDER
         }
 
         #endregion
-
 
         #region Connect, Create or Join Rooms, Disconnect on click methods
 
@@ -192,7 +188,7 @@ namespace TAHL.WAVE_BENDER
 
             int region = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
             string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
-            Array values = Enum.GetValues(typeof(CloudRegionCode));
+            // Array values = Enum.GetValues(typeof(CloudRegionCode));
             // PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
 
             // Use to connect to local server

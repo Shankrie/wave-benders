@@ -9,10 +9,10 @@ namespace TAHL.WAVE_BENDER
         public static partial class Names
         {
             public static string[] PlayerPrefs = new string[] {
-                Globals.PUNKeys.playerName,
-                Globals.PUNKeys.gameRoomName,
-                Globals.PUNKeys.cloudRegion,
-                Globals.PUNKeys.chatRegion
+                PUNKeys.playerName,
+                PUNKeys.gameRoomName,
+                PUNKeys.cloudRegion,
+                PUNKeys.chatRegion
             };
 
             public static string[] NetworkButtons = new string[] {
@@ -34,7 +34,6 @@ namespace TAHL.WAVE_BENDER
 
             public static string[] NetworkTexts = new string[] {
                 "RequiredToConnect",
-                "CurrentlyConnected",
                 "NetworkState",
                 "ErrorState"
             };
@@ -42,6 +41,7 @@ namespace TAHL.WAVE_BENDER
 
             public static string[] CountDowns = new string[]
             {
+                "GetReady",
                 "WaitingForPlayer",
                 "3",
                 "2",
@@ -90,7 +90,6 @@ namespace TAHL.WAVE_BENDER
             public enum NetworkTexts
             {
                 RequiredToConnect,
-                CurrentlyConnected,
                 NetworkState,
                 ErrorState
             }
@@ -106,6 +105,12 @@ namespace TAHL.WAVE_BENDER
             {
                 Cloud,
                 Chat
+            }
+
+            public enum DirectionIndex
+            {
+                Penguin = -1,
+                Seal = 1
             }
         }
 
@@ -179,7 +184,7 @@ namespace TAHL.WAVE_BENDER
 
         public static Color[] InactiveColorsByTurn = new Color[]
         {
-            new Color(0, 0, 0, 0),
+            new Color(0.5f, 0.4f, 0.4f, 1),
             new Color(1, 1, 0.3f, 1)
         };
 
