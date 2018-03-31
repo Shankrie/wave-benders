@@ -10,13 +10,15 @@ namespace TAHL.WAVE_BENDER
         private Vector3 _overflowPointA;
         private Vector3 _overflowPointB;
         private Vector3 _startPosition;
-        private Vector3 _initialScale;
+        private Vector3 _initialScale = new Vector3(0.4f, 0.3f, 1);
         private Vector3 _initialPosition;
 
         private float _speed = Globals.Defaults.WaveSpeed;
         private float _lastSpeed = Globals.Defaults.WaveSpeed;
         private float _time;
         private float _journeyLength;
+
+        private int _startingDirection = 1;
 
         private bool _isFacingRight = true;
         private bool _reachedEnd = false;
@@ -31,7 +33,7 @@ namespace TAHL.WAVE_BENDER
         {
             PlayWaveRising(true);
 
-            transform.localScale = new Vector3(0.4f, 0.3f, 1);
+            transform.localScale = _initialScale;
 
             _time = Time.time;
             _startPosition = transform.position;
@@ -69,9 +71,12 @@ namespace TAHL.WAVE_BENDER
 
         public void Flipper()
         {
-            if(_isFacingRight) {
+            if (_isFacingRight)
+            {
                 transform.rotation = Quaternion.Euler(0, 180, 0);
-            } else {
+            }
+            else
+            {
                 transform.rotation = Quaternion.Euler(0, 0, 0);
             }
             _isFacingRight = !_isFacingRight;
@@ -151,23 +156,29 @@ namespace TAHL.WAVE_BENDER
 
         public void ResetWave()
         {
-            if (!_isFacingRight)
+            _startingDirection *= -1;
+            if ((_startingDirection == 1 && _isFacingRight == false) || 
+                (_startingDirection == -1 && _isFacingRight == true))
             {
                 Flipper();
+                _overflowPointA = Bposition.position;
+                _overflowPointB = Aposition.position;
             }
+            else
+            {
+                _overflowPointA = Aposition.position;
+                _overflowPointB = Bposition.position;
+            }
+
             // Setup positions and scale
             transform.localScale = _initialScale;
             transform.position = _initialPosition;
             _startPosition = _initialPosition;
 
-            _overflowPointA = Aposition.position;
-            _overflowPointB = Bposition.position;
-
             _speed = Globals.Defaults.WaveSpeed;
-
+            _lastSpeed = Globals.Defaults.WaveSpeed;
             _reachedEnd = false;
             enabled = false;
-
         }
     }
 }

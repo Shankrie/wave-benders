@@ -9,7 +9,6 @@ namespace TAHL.WAVE_BENDER
     {
         public List<Key> _spawnedKeys = new List<Key>();
         public Transform KeysPosition;
-        public int Level = 0;
 
         private Sprite[] _sprites;
 
@@ -87,11 +86,9 @@ namespace TAHL.WAVE_BENDER
             _spawnedKeys.Add(new Key(randomKeyObject, currentKey));
         }
 
-        public int[] GetSwearKeys()
+        public int[] GetSwearKeys(int level)
         {
-            int numberOfKeys = Globals.Difficulty.DifficultyLevels[Level];
-            if (Level < Globals.Difficulty.MAX_DIFF_LEVEL)
-                Level++;
+            int numberOfKeys = Globals.Difficulty.DifficultyLevels[level];
 
             IEnumerable<string> words = Globals.CurseWords.Where(w => w.Length == numberOfKeys && w != _lastWord);
             int wordsCount = words.Count();

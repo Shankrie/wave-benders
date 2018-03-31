@@ -7,7 +7,7 @@ namespace TAHL.WAVE_BENDER
     {
         private Text _text;
 
-        private float _delay = 0.25f;
+        private const float DELAY = 0.25f;
         private float _lastTime;
 
         private bool _enabled = true;
@@ -26,7 +26,7 @@ namespace TAHL.WAVE_BENDER
             {
                 _enabled = !_enabled;
                 _text.enabled = _enabled;
-                _lastTime = Time.time + 0.25f;
+                _lastTime = Time.time + DELAY;
             }
         }
     }

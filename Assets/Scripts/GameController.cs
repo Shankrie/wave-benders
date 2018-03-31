@@ -9,15 +9,15 @@ namespace TAHL.WAVE_BENDER
     public class GameController : PunBehaviour
     {
         public GameObject MasterClient = null;
+
         public GameObject Client = null;
-
-        private KeyController _mineKeyController = null;
-
-        private GameObject[] _countDownObjs;
-
         // Winner label in Game End GUI
         public Text WinnerLabel;
         public Text LoseCause;
+        public Text Error;
+
+        private KeyController _mineKeyController = null;
+        private GameObject[] _countDownObjs;
 
         private GameObject _gameEndGUI;
         private const string LocalIp = "127.0.0.1";
@@ -79,9 +79,10 @@ namespace TAHL.WAVE_BENDER
                     _readyTime -= Time.deltaTime;
                     return;
                 }
-                _countDownObjs[0].SetActive(false);
-                _countDownObjs[_index++].SetActive(false);
-                _countDownObjs[_index].SetActive(true);
+                _countDownObjs[(int)Globals.Enums.CountDownTexts.GetReady].SetActive(false);
+                _countDownObjs[(int)Globals.Enums.CountDownTexts.Waiting].SetActive(false);
+                _countDownObjs[(int)Globals.Enums.CountDownTexts.Three].SetActive(true);
+                _index = (int)Globals.Enums.CountDownTexts.Three;
                 _ready = true;
             }
 
@@ -103,11 +104,6 @@ namespace TAHL.WAVE_BENDER
             {
                 _countDownTime += Time.fixedDeltaTime;
             }
-        }
-
-        private void OnGUI()
-        {
-            // GUI.TextArea(new Rect(0, 0, 100, 100), _mineKeyController.gameObject.name);
         }
 
         public void EnableGameEndGUI(bool enable)
@@ -137,28 +133,23 @@ namespace TAHL.WAVE_BENDER
         /// </summary>
         public void RestartLevel()
         {
-            try
+            if (PhotonNetwork.playerList.Length == 0)
             {
-                if (PhotonNetwork.playerList.Length == 1)
-                    throw new Exception("Error. Other player left");
-
-                foreach (GameObject go in _countDownObjs)
-                {
-                    go.SetActive(false);
-                }
-                _startCountDown = false;
-                _ready = true;
-
-                if (_mineKeyController == null)
-                {
-                    throw new Exception("Error. Mine key controller is not defined");
-                }
-                _mineKeyController.ResetLevelCall();
+                Error.text = "Error: Other player has left the game";
+                return;
             }
-            catch (Exception ex)
+
+            foreach (GameObject go in _countDownObjs)
             {
-                Debug.Log(ex.ToString());
+                go.SetActive(false);
             }
+            _startCountDown = false;
+
+            if (_mineKeyController == null)
+            {
+                throw new Exception("Error. Mine key controller is not defined");
+            }
+            _mineKeyController.ResetLevelCall();
         }
 
         public void ReturnToLobby()
@@ -182,6 +173,7 @@ namespace TAHL.WAVE_BENDER
             }
             else
             {
+                _ready = true;
                 _countDownObjs[_index].SetActive(true);
             }
         }

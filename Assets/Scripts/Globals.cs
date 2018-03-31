@@ -94,6 +94,16 @@ namespace TAHL.WAVE_BENDER
                 ErrorState
             }
 
+            public enum CountDownTexts
+            {
+                GetReady,
+                Waiting,
+                Three,
+                Two,
+                One,
+                Start
+            }
+
             public enum ChatRegionCode
             {
                 asia,
@@ -170,10 +180,10 @@ namespace TAHL.WAVE_BENDER
         {
             public static int[] DifficultyLevels = new int[]
             {
-                3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 9, 9
+                3, 4, 5, 6, 7, 9
             };
 
-            public const int MAX_DIFF_LEVEL = 7;
+            public const int MAX_DIFF_LEVEL = 4;
         }
 
         public static Color[] ColorsByTurn = new Color[]

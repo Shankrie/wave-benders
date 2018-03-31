@@ -31,7 +31,7 @@ namespace TAHL.WAVE_BENDER
 
         #endregion vars
 
-        #region private methods
+        #region Private methods
 
         private void Start()
         {
@@ -188,11 +188,11 @@ namespace TAHL.WAVE_BENDER
 
             int region = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
             string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
-            // Array values = Enum.GetValues(typeof(CloudRegionCode));
-            // PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
+            Array values = Enum.GetValues(typeof(CloudRegionCode));
+            PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
 
             // Use to connect to local server
-            PhotonNetwork.ConnectToMaster(LocalIp, 5055, string.Empty, Globals.PUNVersion);
+            //PhotonNetwork.ConnectToMaster(LocalIp, 5055, string.Empty, Globals.PUNVersion);
         }
 
         public void DisconnectFromServer()
@@ -236,7 +236,7 @@ namespace TAHL.WAVE_BENDER
 
         public void StartGame()
         {
-            if (PhotonNetwork.playerList.Length == 1)
+            if (PhotonNetwork.playerList.Length == 2)
             {
                 PhotonNetwork.LoadLevel((int)Globals.Enums.SceneIndex.Game);
             }
