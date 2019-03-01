@@ -50,12 +50,12 @@ namespace TAHL.WAVE_BENDER
                 _filteredOptions.Clear();
 
                 // filter room list by current roomInfo name
-                foreach (RoomInfo roomInfo in PhotonNetwork.GetRoomList()) {
-                    if(Regex.Match(roomInfo.Name, _text, RegexOptions.IgnoreCase).Success)
-                    {
-                        _filteredOptions.Add(roomInfo.Name);
-                    }
-                }
+                // foreach (RoomInfo roomInfo in PhotonNetwork.GetRoomList()) {
+                //     if(Regex.Match(roomInfo.Name, _text, RegexOptions.IgnoreCase).Success)
+                //     {
+                //         _filteredOptions.Add(roomInfo.Name);
+                //     }
+                // }
 
                 // if no found then 
                 if (_filteredOptions.Count == 0)

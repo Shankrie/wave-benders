@@ -3,10 +3,11 @@ using UnityEngine;
 using Photon;
 using UnityEngine.UI;
 using System.Linq;
+using Photon.Pun;
 
 namespace TAHL.WAVE_BENDER
 {
-    public class KeyController : PunBehaviour
+    public class KeyController : MonoBehaviour
     {
         public Text CurrentTurn;
         public Text MyScore;
@@ -66,7 +67,7 @@ namespace TAHL.WAVE_BENDER
             StartPosition = transform.position;
 
             // Start from non master client. Because he's connecting later than master client
-            if (!PhotonNetwork.isMasterClient)
+            if (!PhotonNetwork.IsMasterClient)
                 StartCountDownCall();
 
         }
@@ -88,7 +89,7 @@ namespace TAHL.WAVE_BENDER
             //    {
             //        if (_level < Globals.Difficulty.MAX_DIFF_LEVEL)
             //            _level++;
-            //        _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _keyGen.GetSwearKeys(_level), _waveMover.transform.position, _level);
+            //        _pw.RPC("DeflectWaveRPC", RpcTarget.All, _keyGen.GetSwearKeys(_level), _waveMover.transform.position, _level);
             //    }
             //}
             if (Input.anyKeyDown && Regex.Match(Input.inputString, @"^[a-zA-Z0-9 ]$").Success && _myTurn)
@@ -115,7 +116,7 @@ namespace TAHL.WAVE_BENDER
         {
             if (collider.gameObject.CompareTag(Globals.Tags.Wave))
             {
-                _pw.RPC("WaveFloodRPC", PhotonTargets.All, _playerDirection);
+                // _pw.RPC("WaveFloodRPC", RpcTarget.All, _playerDirection);
             }
         }
 
@@ -132,14 +133,14 @@ namespace TAHL.WAVE_BENDER
                 {
                     if (_level < Globals.Difficulty.MAX_DIFF_LEVEL)
                         _level++;
-                    _pw.RPC("DeflectWaveRPC", PhotonTargets.All, _keyGen.GetSwearKeys(_level), _waveMover.transform.position, _level);
+                    _pw.RPC("DeflectWaveRPC", RpcTarget.All, _keyGen.GetSwearKeys(_level), _waveMover.transform.position, _level);
                 }
             }
             // Move the wave faster to player and don't let player to do anything
             else if (Regex.Match(Input.inputString.ToLower(), "[a-zA-Z0-9 ]").Success)
             {
                 _loseCause = "Wrong key pressed!";
-                _pw.RPC("ForceFloodWaveRPC", PhotonTargets.All);
+                _pw.RPC("ForceFloodWaveRPC", RpcTarget.All);
             }
         }
 
@@ -153,7 +154,7 @@ namespace TAHL.WAVE_BENDER
 
                 if (_progress == _keyCount)
                 {
-                    _pw.RPC("IncreaseWaveSpeedRPC", PhotonTargets.All);
+                    _pw.RPC("IncreaseWaveSpeedRPC", RpcTarget.All);
 
                 }
             }
@@ -164,19 +165,19 @@ namespace TAHL.WAVE_BENDER
         /// </summary>
         public void StartCountDownCall()
         {
-            _pw.RPC("StartCountDownRPC", PhotonTargets.All);
+            _pw.RPC("StartCountDownRPC", RpcTarget.All);
         }
 
 
         public void InitializeCall()
         {
-            if (PhotonNetwork.isMasterClient)
-                _pw.RPC("InitializingRPC", PhotonTargets.All, _keyGen.GetSwearKeys(_level));
+            if (PhotonNetwork.IsMasterClient)
+                _pw.RPC("InitializingRPC", RpcTarget.All, _keyGen.GetSwearKeys(_level));
         }
 
         public void ResetLevelCall()
         {
-            _pw.RPC("ResetLevelRPC", PhotonTargets.All);
+            _pw.RPC("ResetLevelRPC", RpcTarget.All);
         }
 
         [PunRPC]
@@ -220,7 +221,7 @@ namespace TAHL.WAVE_BENDER
             if (firstInitialization)
             {
                 SetControllingView();
-                _myTurn = _controlsView == PhotonNetwork.isMasterClient;
+                _myTurn = _controlsView == PhotonNetwork.IsMasterClient;
                 _startingTurn = _myTurn;
                 if (_myTurn)
                 {
@@ -323,13 +324,13 @@ namespace TAHL.WAVE_BENDER
                 _opponentScore += 1;
                 OpponentScore.text = _opponentScore.ToString();
                 _deathController.playerHaveLost(_playerDirection);
-                _gameController.SetWinner(!_pw.isMine, _loseCause);
+                _gameController.SetWinner(!_pw.IsMine, _loseCause);
             }
             else
             {
                 _myScore++;
                 MyScore.text = _myScore.ToString();
-                _gameController.SetWinner(_pw.isMine, string.Empty);
+                _gameController.SetWinner(_pw.IsMine, string.Empty);
                 foreach (GameObject player in _players)
                 {
                     if (!ReferenceEquals(player, gameObject))
@@ -367,7 +368,7 @@ namespace TAHL.WAVE_BENDER
 
         public void SetControllingView()
         {
-            _controlsView = _pw.owner != null && _pw.owner.ID == PhotonNetwork.player.ID;
+            _controlsView = _pw.Owner != null && _pw.Owner.UserId == PhotonNetwork.LocalPlayer.UserId;
         }
     }
 }

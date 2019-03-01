@@ -3,10 +3,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Photon;
+using Photon.Pun;
 
 namespace TAHL.WAVE_BENDER
 {
-    public class GameController : PunBehaviour
+    public class GameController : MonoBehaviour
     {
         public GameObject MasterClient = null;
 
@@ -48,14 +49,14 @@ namespace TAHL.WAVE_BENDER
             }
             _countDownObjs[1].SetActive(true);
 
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
             {
-                MasterClient.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
+                MasterClient.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.LocalPlayer);
                 _mineKeyController = MasterClient.GetComponent<KeyController>();
             }
             else
             {
-                Client.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
+                Client.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.LocalPlayer);
                 _mineKeyController = Client.GetComponent<KeyController>();
             }
 
@@ -133,7 +134,7 @@ namespace TAHL.WAVE_BENDER
         /// </summary>
         public void RestartLevel()
         {
-            if (PhotonNetwork.playerList.Length == 0)
+            if (PhotonNetwork.PlayerList.Length == 0)
             {
                 Error.text = "Error: Other player has left the game";
                 return;
@@ -178,11 +179,11 @@ namespace TAHL.WAVE_BENDER
             }
         }
 
-        public override void OnOwnershipTransfered(object[] viewAndPlayers)
-        {
-            Client.SetActive(true);
-            MasterClient.SetActive(true);
-        }
+        // public override void OnOwnershipTransfered(object[] viewAndPlayers)
+        // {
+        //     Client.SetActive(true);
+        //     MasterClient.SetActive(true);
+        // }
 
         private void OnApplicationQuit()
         {

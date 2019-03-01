@@ -1,4 +1,5 @@
 ﻿using Photon;
+using Photon.Pun;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 
 namespace TAHL.WAVE_BENDER
 {
-    public class NetworkManager : PunBehaviour
+    public class NetworkManager: MonoBehaviourPunCallbacks
     {
         #region Public variables
         public ChatController ChatController = null;
@@ -52,19 +53,19 @@ namespace TAHL.WAVE_BENDER
             _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = false;
             _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = false;
 
-            PhotonNetwork.sendRate = 30;
-            PhotonNetwork.sendRateOnSerialize = 30;
-            PhotonNetwork.automaticallySyncScene = true;
+            // PhotonNetwork.sendRate = 30;
+            // PhotonNetwork.sendRateOnSerialize = 30;
+            // PhotonNetwork.automaticallySyncScene = true;
         }
 
         private void Update()
         {
-            if (PhotonNetwork.connected != _isConnected)
+            if (PhotonNetwork.IsConnected != _isConnected)
             {
-                _isConnected = PhotonNetwork.connected;
+                _isConnected = PhotonNetwork.IsConnected;
                 if (!_isConnected)
                 {
-                    ChatController.SetUpChat(false);
+                    // ChatController.SetUpChat(false);
                     
                     // only change these when disconnected
                     _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = false;
@@ -82,13 +83,13 @@ namespace TAHL.WAVE_BENDER
 
             }
 
-            _networkTexts[(int)Globals.Enums.NetworkTexts.NetworkState].text = PhotonNetwork.connectionState.ToString() + ". " + _networkState;
+            _networkTexts[(int)Globals.Enums.NetworkTexts.NetworkState].text = PhotonNetwork.NetworkClientState.ToString() + ". " + _networkState;
             _networkTexts[(int)Globals.Enums.NetworkTexts.ErrorState].text = _errorState;
         }
 
         private bool IsReadyToPair()
         {
-            if (!PhotonNetwork.connectedAndReady)
+            if (!PhotonNetwork.IsConnectedAndReady)
             {
                 _errorState = "Connect first!";
                 return false;
@@ -117,7 +118,7 @@ namespace TAHL.WAVE_BENDER
             _playerName = PlayerPrefs.GetString(Globals.PUNKeys.playerName);
 
             // Assert that each player has unique name.
-            int count = PhotonNetwork.playerList.Count(
+            int count = PhotonNetwork.PlayerList.Count(
                 player => player.NickName.ToLower() == _playerName.ToLower()
             );
             if (count > 1)
@@ -150,7 +151,7 @@ namespace TAHL.WAVE_BENDER
                 return;
             }
 
-            ChatController.SetUpChat(true);
+            // ChatController.SetUpChat(true);
 
             _errorState = string.Empty;
             _networkState = "Joined room";
@@ -166,7 +167,7 @@ namespace TAHL.WAVE_BENDER
             _networkTexts[(int)Globals.Enums.NetworkTexts.RequiredToConnect].gameObject
                 .SetActive(true);
 
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
             {
                 _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = true;
             }
@@ -178,18 +179,18 @@ namespace TAHL.WAVE_BENDER
 
         public void ConnectToServer()
         {
-            if (PhotonNetwork.connected)
+            if (PhotonNetwork.IsConnected)
                 return;
 
             _errorState = string.Empty;
 
-            PhotonNetwork.logLevel = PhotonLogLevel.Full;
-            PhotonNetwork.autoJoinLobby = true;
+            PhotonNetwork.LogLevel = PunLogLevel.Full;
 
             int region = PlayerPrefs.GetInt(Globals.PUNKeys.cloudRegion);
-            string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
-            Array values = Enum.GetValues(typeof(CloudRegionCode));
-            PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
+            // string regionName = (string)Enum.GetName(typeof(CloudRegionCode), region);
+            // Array values = Enum.GetValues(typeof(CloudRegionCode));
+            // PhotonNetwork.ConnectToRegion((CloudRegionCode)values.GetValue(region), "v1.0");
+            PhotonNetwork.ConnectUsingSettings();
 
             // Use to connect to local server
             //PhotonNetwork.ConnectToMaster(LocalIp, 5055, string.Empty, Globals.PUNVersion);
@@ -208,16 +209,16 @@ namespace TAHL.WAVE_BENDER
                 return;
 
             // Check if specified room exists
-            bool roomExist = PhotonNetwork.GetRoomList().Count(room => room.Name == _roomName) > 0;
-            if (roomExist)
-            {
-                _errorState = "Specified room alredy exists";
-            }
-            else
-            {
-                RoomOptions roomOpts = new RoomOptions() { IsVisible = true, MaxPlayers = 2 };
-                PhotonNetwork.CreateRoom(_roomName, roomOpts, TypedLobby.Default);
-            }
+            // bool roomExist = PhotonNetwork.GetCustomRoomList().Count(room => room.Name == _roomName) > 0;
+            // if (roomExist)
+            // {
+            //     _errorState = "Specified room alredy exists";
+            // }
+            // else
+            // {
+            //     RoomOptions roomOpts = new RoomOptions() { IsVisible = true, MaxPlayers = 2 };
+            //     PhotonNetwork.CreateRoom(_roomName, roomOpts, TypedLobby.Default);
+            // }
         }
 
         public void JoinRoom()
@@ -227,16 +228,16 @@ namespace TAHL.WAVE_BENDER
                 return;
 
             // Check if specified room exists
-            bool roomExist = PhotonNetwork.GetRoomList().Count(room => room.Name == _roomName) > 0;
-            if (roomExist)
-                PhotonNetwork.JoinRoom(_roomName);
-            else
-                _errorState = "Room doesn't exist";
+            // bool roomExist = PhotonNetwork.GetRoomList().Count(room => room.Name == _roomName) > 0;
+            // if (roomExist)
+            //     PhotonNetwork.JoinRoom(_roomName);
+            // else
+            //     _errorState = "Room doesn't exist";
         }
 
         public void StartGame()
         {
-            if (PhotonNetwork.playerList.Length == 2)
+            if (PhotonNetwork.PlayerList.Length == 2)
             {
                 PhotonNetwork.LoadLevel((int)Globals.Enums.SceneIndex.Game);
             }

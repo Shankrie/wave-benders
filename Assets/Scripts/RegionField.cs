@@ -15,14 +15,14 @@ namespace TAHL.WAVE_BENDER
 
         private int _selectedIndex = 0;
 
-        private Type[] regionTypes = new Type[] { typeof(CloudRegionCode), typeof(Globals.Enums.ChatRegionCode) };
+        // private Type[] regionTypes = new Type[] { typeof(CloudRegionCode), typeof(Globals.Enums.ChatRegionCode) };
 
         private void Awake()
         {
             _regionDropdown = GetComponent<Dropdown>();
 
-            string[] regionNames = Enum.GetNames(regionTypes[(int)regionType]);
-            _regionDropdown.AddOptions(regionNames.ToList());
+            // string[] regionNames = Enum.GetNames(regionTypes[(int)regionType]);
+            // _regionDropdown.AddOptions(regionNames.ToList());
         }
 
         public int GetSelectedIndex()

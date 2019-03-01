@@ -1,4 +1,5 @@
 ﻿using System;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -48,7 +49,7 @@ namespace TAHL.WAVE_BENDER
         #region Bind Events and add default values
 
         /// <summary>
-        /// Set input field default value from player preferences and return result
+        /// Set input field default value from LocalPlayer preferences and return result
         /// </summary>
         /// <returns></returns>
         private string SetPrefFromText(UnityAction<string> onChange)
@@ -57,7 +58,7 @@ namespace TAHL.WAVE_BENDER
             _inputField = GetComponent<InputField>();
             _inputField.onValueChanged.AddListener(onChange);
 
-            // if there's no saved player preference for current flag
+            // if there's no saved LocalPlayer preference for current flag
             if (!PlayerPrefs.HasKey(Globals.Names.PlayerPrefs[(int)playerPrefFlag]))
             {
                 return string.Empty;
@@ -72,7 +73,7 @@ namespace TAHL.WAVE_BENDER
             _dropdownField = GetComponent<Dropdown>();
             _dropdownField.onValueChanged.AddListener(SetRegion);
 
-            // if there's no saved player preference then add default
+            // if there's no saved LocalPlayer preference then add default
             if (!PlayerPrefs.HasKey(Globals.Names.PlayerPrefs[(int)playerPrefFlag]))
             {
                 return;
@@ -84,8 +85,8 @@ namespace TAHL.WAVE_BENDER
 
         private void SetupPlayerName(string name)
         {
-            PhotonNetwork.playerName = name;
-            PhotonNetwork.player.NickName = name;
+            PhotonNetwork.NickName = name;
+            PhotonNetwork.LocalPlayer.NickName = name;
         }
 
         #endregion
@@ -94,8 +95,8 @@ namespace TAHL.WAVE_BENDER
 
         public void SetPlayerName(string value)
         {
-            PhotonNetwork.playerName = _inputField.text;
-            PhotonNetwork.player.NickName = _inputField.text;
+            PhotonNetwork.NickName = _inputField.text;
+            PhotonNetwork.LocalPlayer.NickName = _inputField.text;
             PlayerPrefs.SetString(Globals.Names.PlayerPrefs[(int)playerPrefFlag], _inputField.text);
         }
 
