@@ -1,9 +1,9 @@
 fileFormatVersion: 2
 guid: e56db64b7b32e5540aada9825db2497f
 TextureImporter:
-  fileIDToRecycleName: {}
+  internalIDToNameTable: []
   externalObjects: {}
-  serializedVersion: 9
+  serializedVersion: 10
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -50,7 +50,7 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
-  spriteTessellationDetail: -1
+  spriteTessellationDetail: 1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -58,7 +58,7 @@ TextureImporter:
   compressionQualitySet: 0
   textureFormatSet: 0
   platformSettings:
-  - serializedVersion: 2
+  - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -69,17 +69,43 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 1
   spriteSheet:
     serializedVersion: 2
     sprites: []
-    outline: []
+    outline:
+    - - {x: 63, y: 12}
+      - {x: 62, y: 17}
+      - {x: 59, y: 21}
+      - {x: 55, y: 23}
+      - {x: 50, y: 24}
+      - {x: -6, y: 25}
+      - {x: -53, y: 24}
+      - {x: -57, y: 23}
+      - {x: -60, y: 21}
+      - {x: -62, y: 18}
+      - {x: -63, y: 14}
+      - {x: -64, y: 0}
+      - {x: -63, y: -14}
+      - {x: -61, y: -18}
+      - {x: -59, y: -20}
+      - {x: -56, y: -22}
+      - {x: -50, y: -24}
+      - {x: -4, y: -25}
+      - {x: 50, y: -24}
+      - {x: 56, y: -23}
+      - {x: 60, y: -20}
+      - {x: 62, y: -17}
+      - {x: 64, y: -11}
     physicsShape: []
     bones: []
     spriteID: f1a28b396291cdc449b849dc75d8b03c
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
+    secondaryTextures: []
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
