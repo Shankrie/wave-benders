@@ -111,10 +111,10 @@ namespace TAHL.WAVE_BENDER
 
         PhotonNetwork.LogLevel = PunLogLevel.Full;
 
-        PhotonNetwork.PhotonServerSettings.AppSettings.UseNameServer = false;
-        PhotonNetwork.PhotonServerSettings.AppSettings.Server = "127.0.0.1";
-        PhotonNetwork.PhotonServerSettings.AppSettings.Port = 5055;
-        PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = null;
+        // PhotonNetwork.PhotonServerSettings.AppSettings.UseNameServer = false;
+        // PhotonNetwork.PhotonServerSettings.AppSettings.Server = "127.0.0.1";
+        // PhotonNetwork.PhotonServerSettings.AppSettings.Port = 5055;
+        // PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = null;
         PhotonNetwork.ConnectUsingSettings();
     }
 

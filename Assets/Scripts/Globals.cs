@@ -157,6 +157,7 @@ namespace TAHL.WAVE_BENDER
             public const string ChatContent = "ChatContent";
             public const string GUIBackground = "GUIBackground";
             public const string CountDownObjs = "CountDownObjs";
+            public const string UIOpenSidebar = "UIOpenSidebar";
 
         }
 
