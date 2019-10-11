@@ -4,40 +4,69 @@ using System.Collections.Generic;
 using UnityEngine;
 using Steamworks;
 using TMPro;
+using UnityEngine.UI;
 
-public class AddSteamFriendsInSidebar : MonoBehaviour
+namespace TAHL.WAVE_BENDER
 {
-    public GameObject FriendPrefab;
-    // Start is called before the first frame update
-    void Start()
+    public class AddSteamFriendsInSidebar : MonoBehaviour
     {
-        if(!SteamManager.Initialized)
+        public GameObject FriendPrefab;
+        public Texture2D FriendNotFound;
+        private bool _friendsAdded = false;
+        // Start is called before the first frame update
+        void Start()
         {
-            throw new Exception("Steam Manager not initialized");
-        }
-        if(!FriendPrefab)
-        {
-            throw new Exception("Steam Friend Prefab not set");
-        }
-        AddFriends();
-    }
-
-    void AddFriends() {
-        for(int i = 0; i < SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagAll); i++)
-        {
-            CSteamID id = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagAll);
-            string friendName = SteamFriends.GetFriendPersonaName(id);
-            GameObject GO = Instantiate(FriendPrefab);
-            TextMeshProUGUI friendNameUI = GO.GetComponentInChildren<TextMeshProUGUI>();
-            friendNameUI.text = "Friend: " + friendName; 
-            GO.transform.parent = transform;
-            RectTransform rectTransform = GO.GetComponent<RectTransform>();
-            rectTransform.localScale = new Vector3(1, 1, 1);
-            // rectTransform.anchoredPosition = new Vector2(0, 0);
-            // rectTransform.localPosition = new Vector3(rectTransform.localPosition.x, i * 150, 0);
-            // rectTransform.
+            if(!SteamManager.Initialized)
+            {
+                throw new Exception("Steam Manager not initialized");
+            }
+            if(!FriendPrefab)
+            {
+                throw new Exception("Steam Friend Prefab not set");
+            }
         }
 
+        public void AddFriends() {
+            if(_friendsAdded)
+            {
+                return;
+            }
+            
+            int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagAll);
+            for(int i = 0; i < friendCount; i++)
+            {
+                CSteamID id = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagAll);
+                string friendName = SteamFriends.GetFriendPersonaName(id);
+                Texture2D avatarTexture;
+                if (Globals.Variables.Cache.ContainsKey(id)) {
+                    avatarTexture = Globals.Variables.Cache[id];
+                } else {
+                    avatarTexture = Globals.Methods.GetFriendTexture(id);
+                    if (avatarTexture == null) {
+                        avatarTexture = FriendNotFound;
+                    } else {
+                        Globals.Variables.Cache.Add(id, avatarTexture);
+                    }
+                }
+
+                if (avatarTexture.Equals(null)) {
+                    avatarTexture = this.FriendNotFound; 
+                }
+
+                GameObject GO = Instantiate(FriendPrefab);
+                RawImage img = GO.GetComponentInChildren<RawImage>();
+                img.texture = avatarTexture;
+
+                TextMeshProUGUI friendNameUI = GO.GetComponentInChildren<TextMeshProUGUI>();
+                friendNameUI.text = friendName; 
+                GO.transform.parent = transform;
+                GO.name = friendName;
+                RectTransform rectTransform = GO.GetComponent<RectTransform>();
+                rectTransform.localScale = new Vector3(1, 1, 1);
+            }
+            _friendsAdded = true;
+        }
     }
+
 
 }

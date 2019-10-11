@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using Steamworks;
 using UnityEngine;
 
 namespace TAHL.WAVE_BENDER
 {
     public static class Globals
     {
+        public static partial class Variables
+        {
+            public static Dictionary<CSteamID, Texture2D> Cache = new Dictionary<CSteamID, Texture2D>();
+        }
+
         public static partial class Names
         {
             public static string[] PlayerPrefs = new string[] {
@@ -300,6 +306,47 @@ namespace TAHL.WAVE_BENDER
                 objects[i] = objects[j];
                 objects[j] = temp;
             }
+
+            public static Texture2D GetFriendTexture(CSteamID id) {
+                int avatar = SteamFriends.GetMediumFriendAvatar(id);
+                uint imageWidth = 0;
+                uint imageHeight = 0;
+                bool success = SteamUtils.GetImageSize(avatar, out imageWidth, out imageHeight);
+                if(success && imageWidth != 0 && 0 != imageHeight) {
+
+                    byte[] pubDest = new byte[4 * imageHeight * imageWidth];
+                    Texture2D tex = new Texture2D((int)imageWidth, (int)imageHeight, TextureFormat.RGBA32, false, true);
+                    bool imageFilled = SteamUtils.GetImageRGBA(avatar, pubDest, pubDest.Length);
+                    if(imageFilled)
+                    {
+                        tex.LoadRawTextureData(pubDest);
+                        tex.Apply();
+                        return Globals.Methods.FlipTexture(tex);
+                    }
+                }
+                return null;
+            }
+
+            public static Texture2D FlipTexture(Texture2D original)
+            {
+                Texture2D flipped = new Texture2D(original.width, original.height);
+                
+                int xN = original.width;
+                int yN = original.height;
+                
+                for(int i=0;i<xN;i++)
+                {
+                    for(int j=0;j<yN;j++)
+                    {
+                        flipped.SetPixel(i, yN-j-1, original.GetPixel(i,j));
+                    }
+                }
+
+                flipped.Apply();
+                
+                return flipped;
+            }
+
         }
 
         public static string[] CurseWords = new string[]
