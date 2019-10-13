@@ -133,6 +133,11 @@ namespace TAHL.WAVE_BENDER
 
         public static string PUNVersion = "1.0";
 
+        public static partial class ChatAnimatorKeys
+        {
+            public static string Enabled = "enabled";
+        }
+
         public static partial class PUNAppIds
         {
             public const string chat = "29f6c1e9-d555-43c0-bbf7-ce05ad05cbbf";
@@ -142,6 +147,7 @@ namespace TAHL.WAVE_BENDER
         public static partial class PUNKeys
         {
             public const string playerName = "playerName";
+            public const string userId = "userId";
             public const string gameRoomName = "roomName";
             public const string cloudRegion = "cloudRegion";
             public const string chatRegion = "chatRegion";
@@ -161,6 +167,7 @@ namespace TAHL.WAVE_BENDER
             public const string NetworkButtons = "NetworkButtons";
             public const string NetworkTexts = "NetworkTexts";
             public const string ChatContent = "ChatContent";
+            public const string ChatController = "ChatController";
             public const string GUIBackground = "GUIBackground";
             public const string CountDownObjs = "CountDownObjs";
             public const string UIOpenSidebar = "UIOpenSidebar";

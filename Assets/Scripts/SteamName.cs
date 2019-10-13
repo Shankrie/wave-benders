@@ -28,6 +28,12 @@ namespace TAHL.WAVE_BENDER
             _playerName = GetComponentInChildren<TextMeshProUGUI>();
             _playerImage = GetComponentInChildren<RawImage>();
             _playerName.text = name;
+
+            PlayerPrefs.SetString(Globals.PUNKeys.playerName, name);
+            PlayerPrefs.SetString(Globals.PUNKeys.userId, id.m_SteamID.ToString());
+            ChatController chatController = GameObject.FindGameObjectWithTag(Globals.Tags.ChatController).GetComponent<ChatController>();
+            chatController.InitializeChatConnection();
+
             
             Texture2D avatarTexture = null;
             if (Globals.Variables.Cache.ContainsKey(id))
