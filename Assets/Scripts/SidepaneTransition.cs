@@ -9,17 +9,17 @@ namespace TAHL.WAVE_BENDER
     {
         public Animator Animator; 
         public GameObject FriendsScrollView; 
-        private AddSteamFriendsInSidebar _friendsFromSteam;
         private bool _sidebarOpen;
         private bool _mouseExitAfterClick = false;
         private void Start() {
-            if (!Animator) {
+            if (!Animator)
+            {
                 throw new System.Exception("Animator is not set up");
             }
-            if(!FriendsScrollView) {
+            if (!FriendsScrollView)
+            {
                 throw new System.Exception("Friends Scroll View is not set up");
             }
-            _friendsFromSteam = FriendsScrollView.GetComponentInChildren<AddSteamFriendsInSidebar>();
             FriendsScrollView.SetActive(false);
         }
 
@@ -34,7 +34,6 @@ namespace TAHL.WAVE_BENDER
             else
             {
                 FriendsScrollView.SetActive(true);
-                _friendsFromSteam.AddFriends();
                 Animator.SetTrigger("SelectedSidepane");
                 _sidebarOpen = true;
             }

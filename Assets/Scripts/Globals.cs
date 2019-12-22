@@ -110,13 +110,6 @@ namespace TAHL.WAVE_BENDER
                 Start
             }
 
-            public enum ChatRegionCode
-            {
-                asia,
-                eu,
-                us
-            }
-
             public enum RegionType
             {
                 Cloud,
@@ -128,14 +121,18 @@ namespace TAHL.WAVE_BENDER
                 Penguin = -1,
                 Seal = 1
             }
+
         }
 
 
         public static string PUNVersion = "1.0";
 
-        public static partial class ChatAnimatorKeys
+        public static partial class SidePaneBtnAnimTriggers
         {
-            public static string Enabled = "enabled";
+            public static string Normal = "Normal";
+            public static string Disabled = "Disabled";
+            public static string Hover = "Hover";
+            public static string Pressed = "Pressed";
         }
 
         public static partial class PUNAppIds

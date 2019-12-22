@@ -1,10 +1,10 @@
-﻿using Photon;
-using Photon.Pun;
+﻿using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System;
 
 namespace TAHL.WAVE_BENDER
 {
@@ -15,7 +15,7 @@ namespace TAHL.WAVE_BENDER
     Room = 1
   }
 
-  public class NetworkManager : MonoBehaviourPunCallbacks
+  public class NetworkManager : MonoBehaviour, IConnectionCallbacks, IMatchmakingCallbacks, ILobbyCallbacks
   {
     #region Public variables
     public ChatController ChatController = null;
@@ -28,10 +28,15 @@ namespace TAHL.WAVE_BENDER
 
     #endregion
 
+    public List<Region> Regions = null;
+    public Action<string> RegionChanged = null;
+    public string CurrentRegion = String.Empty;
+
     #region Private variables
 
-    private LoadBalancingClient loadBalancingClient = null;
-    private TextMeshProUGUI NetworkStateLog = null;
+    private LoadBalancingClient _loadBalancingClient = null;
+    private List<Region> _regions = null;
+    private TextMeshProUGUI _networkStateLog = null;
 
     private string _networkState = string.Empty;
     private string _errorState = string.Empty;
@@ -41,31 +46,28 @@ namespace TAHL.WAVE_BENDER
     private string _connectionState = string.Empty;
 
     private const string LocalIp = "127.0.0.1";
-
+    private const string APP_ID = "24d3a1f4-57b0-46d1-8e62-a96a1aa64df8";
     private bool _isConnected = false;
 
     #endregion vars
 
     #region Private methods
 
-    private void Start()
-    {
-        NetworkStateLog = NetworkState.GetComponentInChildren<TextMeshProUGUI>();
-        this.loadBalancingClient = new LoadBalancingClient();
-        this.loadBalancingClient.AppId = "24d3a1f4-57b0-46d1-8e62-a96a1aa64df8";
-        this.loadBalancingClient.AddCallbackTarget(this);
-        this.loadBalancingClient.ConnectToNameServer();
-
-        ConnectToServer();
+    private void Start() {
+        _networkStateLog = NetworkState.GetComponentInChildren<TextMeshProUGUI>();
+        this._loadBalancingClient = new LoadBalancingClient();
+        this._loadBalancingClient.AppId = APP_ID;
+        this._loadBalancingClient.AddCallbackTarget(this);
+        this._loadBalancingClient.ConnectToNameServer();
     }
 
     private void Update()
     {
-        if (this.loadBalancingClient != null)
+        if (this._loadBalancingClient != null)
         {
-            this.loadBalancingClient.Service();
+            this._loadBalancingClient.Service();
 
-            string state = loadBalancingClient.State.ToString();
+            string state = _loadBalancingClient.State.ToString();
             if (this._networkState != state)
             {
                 this._networkState = state;
@@ -74,155 +76,109 @@ namespace TAHL.WAVE_BENDER
         }
     }
 
-    private bool IsReadyToPair()
-    {
-      if (!PhotonNetwork.IsConnectedAndReady)
-      {
-        _errorState = "Connect first!";
-        return false;
-      }
-
-      // Check if player name is entered
-      _playerName = PlayerPrefs.GetString(Globals.PUNKeys.playerName);
-      if (string.IsNullOrEmpty(_playerName))
-      {
-        _errorState = "Player name must be filled";
-        return false;
-      }
-
-      // Check if room name is entered
-      _roomName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
-      if (string.IsNullOrEmpty(_roomName))
-      {
-        _errorState = "Room name must be filled";
-        return false;
-      }
-      return true;
-    }
-
     #endregion
 
     #region Connect, Create or Join Rooms, Disconnect on click methods
 
-    public void ConnectToServer()
-    {
-        ReConnectBtn.interactable = false;
-        _errorState = string.Empty;
+    // public void ConnectToServer()
+    // {
+    //     ReConnectBtn.interactable = false;
+    //     _errorState = string.Empty;
 
-        PhotonNetwork.LogLevel = PunLogLevel.Full;
+    //     PhotonNetwork.LogLevel = PunLogLevel.Full;
 
-        // PhotonNetwork.PhotonServerSettings.AppSettings.UseNameServer = false;
-        // PhotonNetwork.PhotonServerSettings.AppSettings.Server = "127.0.0.1";
-        // PhotonNetwork.PhotonServerSettings.AppSettings.Port = 5055;
-        // PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = null;
-        PhotonNetwork.ConnectUsingSettings();
-    }
+    //     // PhotonNetwork.PhotonServerSettings.AppSettings.UseNameServer = false;
+    //     // PhotonNetwork.PhotonServerSettings.AppSettings.Server = "127.0.0.1";
+    //     // PhotonNetwork.PhotonServerSettings.AppSettings.Port = 5055;
+    //     PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime = APP_ID;
+    //     // this._loadBalancingClient.
+    //     // this._loadBalancingClient.ConnectToNameServer();
 
-    void OnConnectionFail(DisconnectCause cause)
-    {
-        this.ConnectTitle.text = "Failed to Connect To server";
-        ReConnectBtn.interactable = true; 
-    }
+    //     PhotonNetwork.ConnectToBestCloudServer();
 
-    void OnFailedToConnectToPhoton(DisconnectCause cause)
-    {
-        this.ConnectTitle.text = "Failed to Connect To server";
-        ReConnectBtn.interactable = true; 
-    }
+    // }
 
-    public override void OnConnected()
-    {
-        this.ConnectTitle.text = "Join or Create Room";
-    }
+    // void OnConnectionFail(DisconnectCause cause)
+    // {
+    //     this.ConnectTitle.text = "Failed to Connect To server";
+    //     ReConnectBtn.interactable = true; 
+    // }
 
-    public override void OnConnectedToMaster()
-    {
-        this.ConnectTitle.text = "Join or Create Room";
-        NetworkPanels[(int)NetworkPanelEnum.Conenction].SetActive(false);
-        NetworkPanels[(int)NetworkPanelEnum.Room].SetActive(true);
-        // PhotonNetwork.CreateRoom("room");
+    // void OnFailedToConnectToPhoton(DisconnectCause cause)
+    // {
+    //     this.ConnectTitle.text = "Failed to Connect To server";
+    //     ReConnectBtn.interactable = true; 
+    // }
 
-        PhotonNetwork.JoinLobby();
-    }
+    // public override void OnConnected()
+    // {
+    //     this.ConnectTitle.text = "Join or Create Room";
+    // }
 
+    // public override void OnConnectedToMaster()
+    // {
+    //     this._loadBalancingClient.ConnectToNameServer();
+    //     // this._loadBalancingClient.LoadBalancingPeer.OpGetRegions(APP_ID);
+    //     // {
+    //     //     if(this._loadBalancingClient.RegionHandler != null)
+    //     //     {
+    //     //         Debug.Log(this._loadBalancingClient.RegionHandler.EnabledRegions.Count);
+    //     //     }
+    //     // }
+    //     this.ConnectTitle.text = "Join or Create Room";
+    //     NetworkPanels[(int)NetworkPanelEnum.Conenction].SetActive(false);
+    //     NetworkPanels[(int)NetworkPanelEnum.Room].SetActive(true);
+    //     // PhotonNetwork.CreateRoom("room");
 
-    public void JoinRandomRoom()
-    {
-        Debug.Log("join random room");
-        PhotonNetwork.JoinRandomRoom();
-    }
+    //     // PhotonNetwork.JoinLobby();
+    //     // if(PhotonNetwork.NetworkingClient.RegionHandler != null)
+    //     // {
+    //     //     List<Region> regions = PhotonNetwork.NetworkingClient.RegionHandler.EnabledRegions;
+    //     //     foreach(Region region in regions)
+    //     //     {
+    //     //         Debug.Log(region.ToString());
+    //     //     }
+    //     // }
+    // }
 
-    public override void OnJoinedRoom()
-    {
+    // public override void OnJoinRandomFailed(short returnCode, string message)
+    // {
+    //     if(returnCode == 32760) {
+    //         PhotonNetwork.CreateRoom("MyRoom");
+    //     }
+    //     Debug.Log(returnCode);
+    //     Debug.Log(message);
+    // }
 
-      Debug.Log("Joined Room");
-      // Assert that each player has unique name.
-      // if (!IsPlayerNameUnique())
-      // {
-      //     PhotonNetwork.LeaveRoom();
-      //     return;
-      // }
-
-      // // ChatController.SetUpChat(true);
-
-      // _errorState = string.Empty;
-      // _networkState = "Joined room";
-
-      // foreach (Selectable networkInput in _networkInputs)
-      // {
-      //     networkInput.interactable = false;
-      // }
-
-      // _networkButtons[(int)Globals.Enums.NetworkButtons.Host].interactable = false;
-      // _networkButtons[(int)Globals.Enums.NetworkButtons.Join].interactable = false;
-
-      // _networkTexts[(int)Globals.Enums.NetworkTexts.RequiredToConnect].gameObject
-      //     .SetActive(true);
-
-      // if (PhotonNetwork.IsMasterClient)
-      // {
-      //     _networkButtons[(int)Globals.Enums.NetworkButtons.StartGame].interactable = true;
-      // 
-    }
-
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        if(returnCode == 32760) {
-            PhotonNetwork.CreateRoom("MyRoom");
-        }
-        Debug.Log(returnCode);
-        Debug.Log(message);
-    }
-
-    public override void OnJoinRoomFailed(short returnCode, string message)
-    {
-        Debug.Log(returnCode);
+    // public override void OnJoinRoomFailed(short returnCode, string message)
+    // {
+    //     Debug.Log(returnCode);
         
-        Debug.Log(message);
-    }
+    //     Debug.Log(message);
+    // }
 
-    public override void OnDisconnected(Photon.Realtime.DisconnectCause cause)
-    {
-        Debug.Log(cause);
-    }
+    // public override void OnDisconnected(Photon.Realtime.DisconnectCause cause)
+    // {
+    //     Debug.Log(cause);
+    // }
 
-    public void StartGame()
-    {
-      if (PhotonNetwork.PlayerList.Length == 2)
-      {
-        PhotonNetwork.LoadLevel((int)Globals.Enums.SceneIndex.Game);
-      }
-      else
-      {
-        _errorState = "Wait for opponnent to connect";
-      }
-    }
+    // public void StartGame()
+    // {
+    //   if (PhotonNetwork.PlayerList.Length == 2)
+    //   {
+    //     PhotonNetwork.LoadLevel((int)Globals.Enums.SceneIndex.Game);
+    //   }
+    //   else
+    //   {
+    //     _errorState = "Wait for opponnent to connect";
+    //   }
+    // }
 
-    public void Return()
-    {
-      PhotonNetwork.Disconnect();
-      SceneManager.LoadScene((int)Globals.Enums.SceneIndex.MainMenu);
-    }
+    // public void Return()
+    // {
+    //   PhotonNetwork.Disconnect();
+    //   SceneManager.LoadScene((int)Globals.Enums.SceneIndex.MainMenu);
+    // }
 
     public void Exit()
     {
@@ -233,7 +189,118 @@ namespace TAHL.WAVE_BENDER
     public void LogNetworkState(string log)
     {
         NetworkState.SetActive(true);
-        NetworkStateLog.text = log;
+        _networkStateLog.text = log;
+    }
+
+    public void OnConnected()
+    {
+    }
+
+    public void OnConnectedToMaster()
+    {
+        // ConnectionLoading.SetActive(false);
+        NetworkPanels[(int)NetworkPanelEnum.Conenction].SetActive(false);
+        NetworkPanels[(int)NetworkPanelEnum.Room].SetActive(true);
+        ConnectionLoading.SetActive(false);
+        Debug.Log("OnConnectedToMaster");
+        CurrentRegion = _loadBalancingClient.CloudRegion;
+
+        if (RegionChanged != null)
+        {
+            RegionChanged(CurrentRegion);
+        }
+
+        // this._loadBalancingClient.OpJoinRandomRoom();    // joins any open room (no filter)
+    }
+
+
+    public void ConnectToRegion(string region)
+    {
+        if (!_loadBalancingClient.ConnectToRegionMaster(region.ToLower()))
+        {
+            RegionChanged(CurrentRegion);
+            return;
+        }
+
+        ConnectionLoading.SetActive(true);
+    }
+
+    public void OnDisconnected(DisconnectCause cause)
+    {
+        Debug.Log("OnDisconnected(" + cause + ")");
+    }
+
+    public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
+    {
+    }
+
+    public void OnCustomAuthenticationFailed(string debugMessage)
+    {
+    }
+
+    public void OnRegionListReceived(RegionHandler regionHandler)
+    {
+        Debug.Log("OnRegionListReceived");
+        regionHandler.PingMinimumOfRegions(this.OnRegionPingCompleted, null);
+    }
+
+    public void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+    }
+
+    public void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> lobbyStatistics)
+    {
+    }
+
+    public void OnJoinedLobby()
+    {
+    }
+
+    public void OnLeftLobby()
+    {
+    }
+
+    public void OnFriendListUpdate(List<FriendInfo> friendList)
+    {
+    }
+
+    public void OnCreatedRoom()
+    {
+    }
+
+    public void OnCreateRoomFailed(short returnCode, string message)
+    {
+    }
+
+    public void OnJoinedRoom()
+    {
+        Debug.Log("OnJoinedRoom");
+    }
+
+    public void OnJoinRoomFailed(short returnCode, string message)
+    {
+    }
+
+    public void OnJoinRandomFailed(short returnCode, string message)
+    {
+        Debug.Log("OnJoinRandomFailed");
+        this._loadBalancingClient.OpCreateRoom(new EnterRoomParams());
+    }
+
+    public void OnLeftRoom()
+    {
+    }
+
+
+    /// <summary>A callback of the RegionHandler, provided in OnRegionListReceived.</summary>
+    /// <param name="regionHandler">The regionHandler wraps up best region and other region relevant info.</param>
+    private void OnRegionPingCompleted(RegionHandler regionHandler)
+    {
+        Regions = regionHandler.EnabledRegions;
+        
+        Debug.Log("OnRegionPingCompleted " + regionHandler.BestRegion);
+        Debug.Log("RegionPingSummary: " + regionHandler.SummaryToCache);
+        this._loadBalancingClient.ConnectToRegionMaster(regionHandler.BestRegion.Code);
     }
 
     #endregion connect methods

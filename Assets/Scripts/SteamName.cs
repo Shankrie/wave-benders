@@ -9,8 +9,7 @@ namespace TAHL.WAVE_BENDER
     public class SteamName : MonoBehaviour
     {
         public Texture2D FriendNotFound;
-        private TextMeshProUGUI _playerName;
-        private RawImage _playerImage;
+        public ChatController ChatController;
         // Start is called before the first frame update
         void Start()
         {
@@ -25,16 +24,13 @@ namespace TAHL.WAVE_BENDER
 
             CSteamID id = SteamUser.GetSteamID();
             string name = SteamFriends.GetPersonaName();
-            _playerName = GetComponentInChildren<TextMeshProUGUI>();
-            _playerImage = GetComponentInChildren<RawImage>();
-            _playerName.text = name;
+            TextMeshProUGUI playerName = GetComponentInChildren<TextMeshProUGUI>();
+            playerName.text = name;
 
             PlayerPrefs.SetString(Globals.PUNKeys.playerName, name);
             PlayerPrefs.SetString(Globals.PUNKeys.userId, id.m_SteamID.ToString());
-            ChatController chatController = GameObject.FindGameObjectWithTag(Globals.Tags.ChatController).GetComponent<ChatController>();
-            chatController.InitializeChatConnection();
+            ChatController.InitializeChatConnection();
 
-            
             Texture2D avatarTexture = null;
             if (Globals.Variables.Cache.ContainsKey(id))
             {
@@ -53,7 +49,8 @@ namespace TAHL.WAVE_BENDER
                 }
             }
 
-            _playerImage.texture = avatarTexture;
+            RawImage playerAvatarPic = GetComponentInChildren<RawImage>();
+            playerAvatarPic.texture = avatarTexture;
             
         }
 

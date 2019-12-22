@@ -5,11 +5,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using TMPro.EditorUtilities;
 using UnityEngine;
 
 namespace TAHL.WAVE_BENDER
 {
+    public static class ChannelNames
+    {
+        public static string Global = "Global";
+    }
+
+    public enum MessageTypes
+    {
+        OwnerMessage = 0,
+        OthersMessage = 1,
+        SystemMessage = 2
+    }
+
     [RequireComponent(typeof(Animator))]
     public class ChatController : MonoBehaviour, IChatClientListener
     {
@@ -19,10 +30,13 @@ namespace TAHL.WAVE_BENDER
         public TMP_InputField ChatInputField;
         public TextMeshProUGUI ChatInput;
         public GameObject ChatContent = null;
-        public Color ColorOfMyMessage = Color.blue;
-        public Color ColorOfOtherMessage = Color.black;
-
         public bool IsChatConnected { get { return _connected; } }
+
+        private Color OwnerMsgColor = new Color(0.7f, 0.22f, 0.2f);
+        private Color OthersMsgColor = new Color(0.15f, 0.46f, 0.87f);
+        
+        public Color SystemMsgColor = new Color(0.15f, 0.15f, 0.15f);
+
 
         #endregion publicVars
 
@@ -78,7 +92,9 @@ namespace TAHL.WAVE_BENDER
             }
 
             _chatAnimator = GetComponent<Animator>();
-            ChatInput.color = ColorOfMyMessage;
+            _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Disabled);
+            ChatInput.color = OwnerMsgColor;
+            InitializeChatConnection();
         }
 
         void Update()
@@ -93,10 +109,21 @@ namespace TAHL.WAVE_BENDER
 
         public void OnConnected()
         {
-            Debug.Log("Connected");
 
+            _channelName = ChannelNames.Global;
             _chatClient.Subscribe(new[] { _channelName });
             _chatClient.SetOnlineStatus(ChatUserStatus.Online);
+            _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Normal);
+            CreateMessage(
+                (
+                    "These are commands for chat\n" + 
+                    "Shift + Tab - You can change from private to global channel\n" + 
+                    "\\" + "to friendName - message to friend in private\n" +
+                    "\\help - shows available commands."
+                ),
+                "",
+                (int)MessageTypes.SystemMessage
+            );
 
         }
 
@@ -105,6 +132,7 @@ namespace TAHL.WAVE_BENDER
             Debug.Log("Disonnected: " + _chatClient.DisconnectedCause.ToString());
 
             _connected = false;
+            _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Disabled);
             StopAllCoroutines();
 
         }
@@ -126,7 +154,7 @@ namespace TAHL.WAVE_BENDER
             foreach (string msg in messages)
                 fullMsg += msg;
 
-            CreateMessage(fullMsg, senders[0], senders.Contains(_userId));
+            CreateMessage(fullMsg, senders[0], senders.Contains(_userId) ? 0 : 1);
         }
 
         public void OnStatusUpdate(string user, int status, bool gotMessage, object message)
@@ -142,14 +170,13 @@ namespace TAHL.WAVE_BENDER
         public void OnSubscribed(string[] channels, bool[] results)
         {
             _connected = true;
-            _chatAnimator.SetBool(Globals.ChatAnimatorKeys.Enabled, true);
-
+            _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Normal);
         }
 
         public void OnUnsubscribed(string[] channels)
         {
             _connected = false;
-            _chatAnimator.SetBool(Globals.ChatAnimatorKeys.Enabled, false);
+            _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Disabled);
         }
 
         #endregion ChatClientInterfaceProps
@@ -159,10 +186,6 @@ namespace TAHL.WAVE_BENDER
         // /// </summary>
         public void InitializeChatConnection()
         {
-            // Get chat region
-            // List<string> regionNames = Enum.GetNames(typeof(Globals.Enums.ChatRegionCode)).ToList();
-            // int regionIndex = PlayerPrefs.GetInt(Globals.PUNKeys.chatRegion);
-
             // Set channel name to game room name and userid to player name
             _channelName = PlayerPrefs.GetString(Globals.PUNKeys.gameRoomName);
             _userId = PlayerPrefs.GetString(Globals.PUNKeys.userId);
@@ -193,20 +216,20 @@ namespace TAHL.WAVE_BENDER
             _chatClient.PublishMessage(_channelName, text);
         }
 
-        private void CreateMessage(string text, string sender, bool myMessage)
+        private void CreateMessage(string text, string sender, int messageType)
         {
             GameObject message = Instantiate(ChatMessage,
                 ChatMessage.transform.position,
                 Quaternion.identity,
                 ChatContent.transform);
 
-            SetUpMessage(message, sender, text, myMessage);
+            SetUpMessage(message, sender, text, messageType);
         }
 
         /// <summary>
         /// Set component text to formatted message
         /// </summary>
-        private void SetUpMessage(GameObject message, string sender, string text, bool myMessage)
+        private void SetUpMessage(GameObject message, string sender, string text, int messageType)
 
         {
             TextMeshProUGUI textComponent = message.GetComponent<TextMeshProUGUI>();
@@ -214,15 +237,23 @@ namespace TAHL.WAVE_BENDER
             {
                 throw new Exception("Error. Message doesn't have text field");
             }
-            if (myMessage)
+
+            switch(messageType)
             {
-                textComponent.color = ColorOfMyMessage;
-                textComponent.text = String.Format("You: {0}", text);
-            }
-            else
-            {
-                textComponent.color = ColorOfOtherMessage;
-                textComponent.text = String.Format("{0}: {1}", sender, text);
+                case (int)MessageTypes.OwnerMessage:
+                    textComponent.color = new Color(0.7f, 0.22f, 0.2f);
+                    textComponent.text = String.Format("You: {0}", text);
+                    break;
+                case (int)MessageTypes.OthersMessage:
+                    textComponent.color = new Color(0.15f, 0.46f, 0.87f);
+                    textComponent.text = String.Format("{0}: {1}", sender, text);
+                    break;
+                case (int)MessageTypes.SystemMessage:
+                    textComponent.color = new Color(0.1f, 0.1f, 0.1f);
+                    textComponent.text = text;
+                    break;
+                default:
+                    break;
             }
 
             message.transform.SetAsFirstSibling();

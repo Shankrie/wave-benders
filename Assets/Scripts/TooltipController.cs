@@ -5,27 +5,25 @@ using UnityEngine.EventSystems;
 using System.Collections;
 
 namespace TAHL.WAVE_BENDER {
-    [RequireComponent(typeof(Image))]
     public class TooltipController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
+        public GameObject TooltipGO;
         public string TooltipText;
-        public Image Tooltip;
+        public float timeoutTime;
         private RectTransform _rectTransform; 
-        private GameObject _tooltipGO;
         private TextMeshProUGUI _tooltipText; 
         private IEnumerator _routine = null;
         private bool _showText = false;
         // Start is called before the first frame update
         void Start()
         {
-            if(string.IsNullOrEmpty(TooltipText) || !Tooltip)
+            if(string.IsNullOrEmpty(TooltipText) || !TooltipGO)
             {
                 throw new System.Exception("TooltipController parameters not set");
             }
             
             this._rectTransform = GetComponent<RectTransform>();
-            this._tooltipGO = Tooltip.gameObject;
-            this._tooltipText = this._tooltipGO.GetComponentInChildren<TextMeshProUGUI>();
+            this._tooltipText = this.TooltipGO.GetComponentInChildren<TextMeshProUGUI>();
             this._tooltipText.text = this.TooltipText;
         }
 
@@ -44,12 +42,12 @@ namespace TAHL.WAVE_BENDER {
         public void OnPointerExit(PointerEventData eventData)
         {
             _showText = false;
-            _tooltipGO.SetActive(false);
+            TooltipGO.SetActive(false);
         }
 
         IEnumerator ShowInDelay() {
-            yield return new WaitForSeconds(0.2f);
-            _tooltipGO.SetActive(_showText);
+            yield return new WaitForSeconds(timeoutTime);
+            TooltipGO.SetActive(_showText);
         }
     }
 }
