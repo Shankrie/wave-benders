@@ -9,12 +9,6 @@ using System;
 namespace TAHL.WAVE_BENDER
 {
 
-  enum NetworkPanelEnum
-  {
-    Conenction = 0,
-    Room = 1
-  }
-
   public class NetworkManager : MonoBehaviour, IConnectionCallbacks, IMatchmakingCallbacks, ILobbyCallbacks
   {
     #region Public variables
@@ -29,7 +23,7 @@ namespace TAHL.WAVE_BENDER
     #endregion
 
     public List<Region> Regions = null;
-    public Action<string> RegionChanged = null;
+    public Action RegionChanged = null;
     public string CurrentRegion = String.Empty;
 
     #region Private variables
@@ -198,19 +192,19 @@ namespace TAHL.WAVE_BENDER
 
     public void OnConnectedToMaster()
     {
-        // ConnectionLoading.SetActive(false);
-        NetworkPanels[(int)NetworkPanelEnum.Conenction].SetActive(false);
-        NetworkPanels[(int)NetworkPanelEnum.Room].SetActive(true);
-        ConnectionLoading.SetActive(false);
-        Debug.Log("OnConnectedToMaster");
-        CurrentRegion = _loadBalancingClient.CloudRegion;
-
-        if (RegionChanged != null)
+        Globals.GameProperties.isNetworkLoaded = true;
+        if (Globals.GameProperties.isSteamLobbyEntered)
         {
-            RegionChanged(CurrentRegion);
+            ConnectionLoading.SetActive(false);
+            NetworkPanels[(int)Globals.Enums.NetworkPanels.Connection].SetActive(false);
+            NetworkPanels[(int)Globals.Enums.NetworkPanels.Room].SetActive(true);
         }
 
-        // this._loadBalancingClient.OpJoinRandomRoom();    // joins any open room (no filter)
+        CurrentRegion = _loadBalancingClient.CloudRegion;
+        if (RegionChanged != null)
+        {
+            RegionChanged();
+        }
     }
 
 
@@ -218,7 +212,8 @@ namespace TAHL.WAVE_BENDER
     {
         if (!_loadBalancingClient.ConnectToRegionMaster(region.ToLower()))
         {
-            RegionChanged(CurrentRegion);
+            Debug.Log(String.Format("Region could not be changed to {0}", region));
+            RegionChanged();
             return;
         }
 

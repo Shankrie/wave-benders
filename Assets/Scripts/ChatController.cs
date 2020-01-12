@@ -14,6 +14,12 @@ namespace TAHL.WAVE_BENDER
         public static string Global = "Global";
     }
 
+    public static class ButtonAnimationTriggers
+    {
+        public static string Normal = "Normal";
+        public static string Pressed = "Pressed";
+    }
+
     public enum MessageTypes
     {
         OwnerMessage = 0,
@@ -26,6 +32,7 @@ namespace TAHL.WAVE_BENDER
     {
 
         #region publicVars
+        public GameObject ChatContainer;
         public GameObject ChatMessage;
         public TMP_InputField ChatInputField;
         public TextMeshProUGUI ChatInput;
@@ -52,9 +59,8 @@ namespace TAHL.WAVE_BENDER
         private string _userId = null;
 
 
-        private bool _subscribedToRoom = false;
         private bool _connected = false;
-        private bool _chatExpanded = false;
+        private bool _isChatOpen = false;
 
         const int MAX_MSG_IN_SCREEN = 25;
         const int OVERFLOW_SIZE = 28;
@@ -94,6 +100,9 @@ namespace TAHL.WAVE_BENDER
             _chatAnimator = GetComponent<Animator>();
             _chatAnimator.SetTrigger(Globals.SidePaneBtnAnimTriggers.Disabled);
             ChatInput.color = OwnerMsgColor;
+            ChatInputField.onEndEdit.AddListener(delegate(string text) {
+                SendText(ChatInputField.text);
+            });
             InitializeChatConnection();
         }
 
@@ -273,6 +282,13 @@ namespace TAHL.WAVE_BENDER
         public void OnUserUnsubscribed(string channel, string user)
         {
             throw new NotImplementedException();
+        }
+        
+        public void OnClick()
+        {
+            this._chatAnimator.SetTrigger(this._isChatOpen ? ButtonAnimationTriggers.Normal : ButtonAnimationTriggers.Pressed);
+            this._isChatOpen = !this._isChatOpen;
+            ChatContainer.SetActive(this._isChatOpen);
         }
     }
 }

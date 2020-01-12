@@ -7,6 +7,14 @@ namespace TAHL.WAVE_BENDER
 {
     public static class Globals
     {
+
+        public static class GameProperties
+        {
+            public static bool isNetworkLoaded = false;
+            public static bool isSteamLobbyEntered = false;
+        }
+
+
         public static partial class Variables
         {
             public static Dictionary<CSteamID, Texture2D> Cache = new Dictionary<CSteamID, Texture2D>();
@@ -58,6 +66,12 @@ namespace TAHL.WAVE_BENDER
 
         public static class Enums
         {
+            public enum NetworkPanels 
+            {
+                Connection = 0,
+                Room = 1
+            }
+
             public enum SceneIndex
             {
                 MainMenu = 0,
@@ -153,21 +167,14 @@ namespace TAHL.WAVE_BENDER
         public static partial class Tags
         {
             public const string GameEndGUI = "GameEndGUI";
-            public const string NetworkGUI = "NetworkGUI";
-            public const string ChatGUI = "ChatGUI";
             public const string KeyGen = "KeyGen";
             public const string Player = "Player";
             public const string Wave = "Wave";
             public const string GameController = "GameController";
             public const string NetworkManager = "NetworkManager";
-            public const string NetworkInputs = "NetworkInputs";
-            public const string NetworkButtons = "NetworkButtons";
-            public const string NetworkTexts = "NetworkTexts";
-            public const string ChatContent = "ChatContent";
             public const string ChatController = "ChatController";
-            public const string GUIBackground = "GUIBackground";
             public const string CountDownObjs = "CountDownObjs";
-            public const string UIOpenSidebar = "UIOpenSidebar";
+            public const string Children = "Children";
 
         }
 

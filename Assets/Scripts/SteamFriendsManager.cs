@@ -4,6 +4,7 @@ using UnityEngine;
 using Steamworks;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 namespace TAHL.WAVE_BENDER
 {
@@ -20,61 +21,20 @@ namespace TAHL.WAVE_BENDER
         public Texture2D FriendNotFound;
         private bool _friendsAdded = false;
         private  Color ONLINE_COLOR = new Color(0f, 1f, .05f, 1f);
-        private  Color OFFLINE_COLOR = new Color(.47f, .47f, .47f, 1f);
+        private Color OFFLINE_COLOR = new Color(.47f, .47f, .47f, 1f);
+        private List<CSteamID> _friendsId = new List<CSteamID>();
+        private List<string> _friendsName = new List<string>();
+        private List<Texture2D> _friendsAvatar = new List<Texture2D>();
 
         private bool joinedSteamLobby = false;
         private CSteamID lobbyId; 
         // Start is called before the first frame update
         void Start()
         {
-            if (!SteamManager.Initialized)
-            {
-                throw new Exception("Steam Manager not initialized");
-            }
-
             if (!FriendPrefab)
             {
                 throw new Exception("Steam Friend Prefab not set");
             }
-
-            SteamAPI.Init();
-            SteamAPICall_t steamCall = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypePublic, 2);
-            
-            Callback<LobbyCreated_t>.Create(LobbyCreated);
-            Callback<LobbyEnter_t>.Create(LobbyEntered);
-        }
-
-        void Update()
-        {
-            if (!SteamManager.Initialized)
-            {
-                return;
-            }
-
-            SteamAPI.RunCallbacks();
-        }
-
-        private void LobbyEntered(LobbyEnter_t enteredLobby)
-        {
-            if (enteredLobby.m_ulSteamIDLobby != 0)
-            {
-                lobbyId = new CSteamID(enteredLobby.m_ulSteamIDLobby);
-                joinedSteamLobby = true;
-            }
-        
-            AddFriends();
-
-            SteamMatchmaking.GetLobbyData(lobbyId, "");
-            Callback<LobbyDataUpdate_t>.Create(LobbyDataUpdate);
-        }
-
-        private void LobbyDataUpdate(LobbyDataUpdate_t lobbyData)
-        {
-            Debug.Log(lobbyData);
-        }
-
-        private void LobbyCreated(LobbyCreated_t created)
-        {
         }
 
         private void InviteFriend(CSteamID userId)
@@ -84,19 +44,14 @@ namespace TAHL.WAVE_BENDER
             }
         }
 
-        public void AddFriends() {
-            if (_friendsAdded)
-            {
-                return;
-            }
-            
+        public void SetFriendsData()
+        {
             int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagAll);
-            Animator animator;
             for(int i = 0; i < friendCount; i++)
             {
                 // Get friend CSTEAM id, personal name
                 CSteamID id = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagAll);
-                string friendName = SteamFriends.GetFriendPersonaName(id);
+                string name = SteamFriends.GetFriendPersonaName(id);
 
                 // Get friend personal profile picture
                 Texture2D avatarTexture;
@@ -117,13 +72,36 @@ namespace TAHL.WAVE_BENDER
                     }
                 }
 
-                // assign for default picture
                 if (avatarTexture.Equals(null)) {
                     avatarTexture = this.FriendNotFound; 
                 }
 
+                _friendsId.Add(id);
+                _friendsName.Add(name);
+                _friendsAvatar.Add(avatarTexture);
+            }
+        }
+
+        public void AddFriends() 
+        {
+            if (_friendsAdded)
+            {
+                UpdateFriendsList();
+                return;
+            }
+            
+            Animator animator;
+            for(int i = 0; i < _friendsId.Count; i++)
+            {
+                // Get friend CSTEAM id, personal name
+                CSteamID id = _friendsId[i]; 
+                string friendPersonalName = _friendsName[i]; 
+                Texture2D avatarTexture = _friendsAvatar[i];
+
+                // Get friend personal profile picture
                 // Check if online
                 EPersonaState state = SteamFriends.GetFriendPersonaState(id);
+
                 GameObject GO = Instantiate(FriendPrefab);
                 animator = GO.GetComponent<Animator>();
                 GO.transform.SetParent(FriendsContainer.transform);
@@ -151,7 +129,6 @@ namespace TAHL.WAVE_BENDER
                     buttons[1].onClick.AddListener(delegate() {
                         // SteamFriends.ReplyToFriendMessage();
                     });
-                    
                 } 
                 else
                 {
@@ -168,8 +145,8 @@ namespace TAHL.WAVE_BENDER
                 }
 
                 TextMeshProUGUI friendNameUI = GO.GetComponentInChildren<TextMeshProUGUI>();
-                friendNameUI.text = friendName; 
-                GO.name = friendName;
+                friendNameUI.text = friendPersonalName; 
+                GO.name = friendPersonalName;
 
                 // Reset prefab rect transform size 
                 RectTransform rectTransform = GO.GetComponent<RectTransform>();
@@ -177,12 +154,45 @@ namespace TAHL.WAVE_BENDER
             }
             _friendsAdded = true;
         }
+        
+        public void UpdateFriendsList()
+        {
+            for(int i = 0; i < _friendsId.Count; i++)
+            {
+                // Get friend CSTEAM id, personal name
+                CSteamID id = _friendsId[i]; 
+                string friendPersonalName = _friendsName[i]; 
+                Texture2D avatarTexture = _friendsAvatar[i];
+
+                // Get friend personal profile picture
+                // Check if online
+                EPersonaState state = SteamFriends.GetFriendPersonaState(id);
+
+                Transform FriendTransform = FriendsContainer.transform.GetChildByName(friendPersonalName);
+                if (FriendTransform == null)
+                {
+                    continue;
+                }
+
+                // Couldn't do it with animation somewhy ? so hardcoding in the state check 
+                Image onlineStatusImg = FriendTransform.GetChild(1).GetComponent<Image>();
+
+                // set friend online status and if online move as first element 
+                if (state == EPersonaState.k_EPersonaStateOnline)
+                {
+                    onlineStatusImg.color = ONLINE_COLOR;
+                } 
+                else
+                {
+                    onlineStatusImg.color = OFFLINE_COLOR;   
+                }
+            }
+
+        }
 
         private void InviteFriendToGame(CSteamID friendId)
         {
             SteamFriends.InviteUserToGame(friendId, "Yikes"); 
         }
     }
-
-
 }

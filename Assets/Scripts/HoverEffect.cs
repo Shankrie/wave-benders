@@ -21,7 +21,10 @@ public class HoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public Color NormalColor;
     public Color ChangedColor; 
     public float IncreaseTransparencyBy;
-    public string AnimationTriggerName;
+    public string HoverAnimationTrigger;
+    public string NormalAnimationTrigger;
+    public string HoverAnimationName;
+    public string NormalAnimationName;
     public HoverActionType ActionType;
 
     private Animator _animator;
@@ -61,7 +64,15 @@ public class HoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         switch(ActionType)
         {
             case HoverActionType.Animate:
-                _animator.SetTrigger(AnimationTriggerName);
+                if (!String.IsNullOrWhiteSpace(HoverAnimationTrigger))
+                {
+                    AnimatorStateInfo info = _animator.GetCurrentAnimatorStateInfo(0);
+                    if (info.IsName(NormalAnimationName))
+                    {
+                        _animator.SetTrigger(HoverAnimationTrigger);
+                    }
+                }
+
                 break;
             case HoverActionType.ChangeTextColor:
                 _UIText.color = ChangedColor;
@@ -85,6 +96,16 @@ public class HoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         switch(ActionType)
         {
+            case HoverActionType.Animate:
+                if (!String.IsNullOrWhiteSpace(NormalAnimationTrigger))
+                {
+                    AnimatorStateInfo info = _animator.GetCurrentAnimatorStateInfo(0);
+                    if (info.IsName(HoverAnimationName))
+                    {
+                        _animator.SetTrigger(NormalAnimationTrigger);
+                    }
+                }
+                break;
             case HoverActionType.ChangeTextColor:
                 _UIText.color = NormalColor;
                 break; 

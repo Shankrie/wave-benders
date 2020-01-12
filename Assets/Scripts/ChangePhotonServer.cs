@@ -49,21 +49,24 @@ namespace TAHL.WAVE_BENDER
 
             }
 
-            // get network manager script and assign action OnRegionsResponse a delegate
+            // get network manager script and assign action to call when region change
             _networkManager = networkManagerGO.GetComponent<NetworkManager>();
-            _networkManager.RegionChanged = delegate(string currentRegion)
-            {
-                TextMeshProUGUI currentServerName = gameObject.GetComponentInChildren<TextMeshProUGUI>();
-                currentServerName.text = currentRegion.ToUpper().Split('/')[0];
-                _currentRegionName = currentRegion.ToUpper().Split('/')[0];
+            _networkManager.RegionChanged = OnRegionChange;
+            OnRegionChange();
+            InitializeRegions(_networkManager.Regions, _networkManager.CurrentRegion);
+        }
+        
+        private void OnRegionChange()
+        {
+            string currentRegion = _networkManager.CurrentRegion;
+            TextMeshProUGUI currentServerName = gameObject.GetComponentInChildren<TextMeshProUGUI>();
+            currentServerName.text = currentRegion.ToUpper().Split('/')[0];
+            _currentRegionName = currentRegion.ToUpper().Split('/')[0];
 
-                SetAsSelected(currentRegion, 0.05f);
+            SetAsSelected(_currentRegionName, 0.05f);
 
-                // _animator.SetTrigger(ServerAnimatorParams.NormalTrigger);
-                _button.interactable = true;
-                InitializeRegions(_networkManager.Regions, _networkManager.CurrentRegion);
-            };
-
+            _button.interactable = true;
+            _animator.SetTrigger(ServerAnimatorParams.NormalTrigger);
         }
 
 
@@ -74,8 +77,7 @@ namespace TAHL.WAVE_BENDER
             }
 
             TextMeshProUGUI currentServerName = gameObject.GetComponentInChildren<TextMeshProUGUI>();
-            currentServerName.text = currentRegion.ToUpper().Split('/')[0];
-            _currentRegionName = currentRegion.ToUpper().Split('/')[0];
+            currentServerName.text = _currentRegionName;
 
             _regionsInitialized = true;
 
@@ -83,7 +85,6 @@ namespace TAHL.WAVE_BENDER
             foreach(Region region in regions)
             {
                 GameObject regionNameGO = Instantiate(ServerNamePrefab, Vector4.zero, Quaternion.identity, ServersContent.transform);
-                Button btn = regionNameGO.GetComponent<Button>();
 
                 string regionName = region.Code.ToUpper();
                 _regionsGamobjects.Add(regionName, regionNameGO);
@@ -94,7 +95,9 @@ namespace TAHL.WAVE_BENDER
 
                 TextMeshProUGUI regionNameText = regionNameGO.GetComponentInChildren<TextMeshProUGUI>();
                 regionNameText.text = regionName;
-                btn.onClick.AddListener(delegate {
+                
+                Button btn = regionNameGO.GetComponent<Button>();
+                btn.onClick.AddListener(() => {
                     OnSelectServer(regionNameText.text);
                 });
             }
@@ -127,10 +130,9 @@ namespace TAHL.WAVE_BENDER
             Image img = GO.GetComponent<Image>();
             img.color = new Color(img.color.r, img.color.g, img.color.b, imageColorAlpha);
         }
-
         public void OnSelectServer(string regionName)
         {
-            SetAsSelected(regionName, 0.22f);
+            SetAsSelected(_currentRegionName, 0.22f);
             _currentRegionName = regionName; 
 
             _animator.SetTrigger(ServerAnimatorParams.DisabledTrigger);
