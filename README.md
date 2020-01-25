@@ -1,7 +1,8 @@
 
 # Wave Benders Game Repository
-<link href="#install">Install</link>
-<link href="#things-to-do">ToDO</link
+<a href="#install">Install</a>
+<a href="#things-to-do">ToDO</a>
+
 # Install
 
 1. Add SteamWorks api to you project
